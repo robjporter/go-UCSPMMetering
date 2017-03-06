@@ -65,4 +65,4 @@ unpacking objects: 100% (10/10), done.
 4. Change into the new directory, cd go-UCSPMMetering.
 5. Move onto setting up the application.
 
-## Setting up application
+## Setting up the application

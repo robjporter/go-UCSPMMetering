@@ -1,0 +1,21 @@
+eula:
+  agreed: false
+input:
+  file: uuid.json
+output:
+  file: output.csv
+ucs:
+  systems:
+  - password: 5G4Rr6gZxMZxe3iPRVjVzh6odkShu/Mn
+    url: 10.52.208.160
+    username: admin
+  - password: xQuOeHaJWZIJVPDXAzN5gWdt3m4JlJjQ
+    url: 10.52.208.120
+    username: admin
+  - password: iDX4ezcTFh5qmN2gHkPzWYyuHpwN
+    url: 10.52.208.71
+    username: admin
+ucspm:
+  password: BQfxwIAoG0np+jfHd+esKsfXjBpLe0Bwl1SU
+  url: 10.51.8.48
+  username: roporter
