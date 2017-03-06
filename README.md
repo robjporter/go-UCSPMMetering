@@ -1,4 +1,18 @@
 # go-UCSPMMetering
+This application has been put together to assist with billing Cisco UCS platforms based on CPU utilisation.  As of the current status the Cisco UCS API does not expose the CPU percentage for each of the physical CPU's.  It is therefore not possible to have creative billing methods for how the systems are consumed.
+
+It was required to create a way of monitoring, investigating and then summerising the utilisation on a weekly basis.
+
+This tool brings together a couple of enterprise applications to allow the capture of this information, mainly it does the following;
+
+* It will query Cisco UCS Performance Manager for all devices. (It will then exclude, network, compute and storage devices, to leave servers and hypervisors)
+* Each device is then queried to get the associated hardware UUID. (If one is not in the Cisco UCS Performance Manager inventory, then it is ignored.)
+* Each UCS Domain is then queried for all of the UUID's and returns information about the hardware it is associated with.
+* The tool will then match each of the UUID's with the physical server UUID and produce an output of information. (Mainly ties a system to the Cisco UCS Server serial number)
+
+### To be completed
+* Pull a report from each UUID in Performance Manager on a weekly basis.
+
 
 ## Setting up your GO environment
 Depending on your particular environment, there are a number of ways to setup and install GO.  This repo was developed on a MAC and was installed using Brew.  For instructions on installing HomeBrew, please check [here](https://brew.sh/); and then entering;
