@@ -7,11 +7,13 @@ import (
 
 	"./flags"
 	"./ucs"
+	"./ucspm"
 )
 
 var (
-	ucsSystems ucs.Application
-	configName = "./config.yaml"
+	ucsSystems     ucs.Application
+	ucsPerformance ucspm.Application
+	configName     = "./config.yaml"
 )
 
 func init() {
@@ -26,11 +28,17 @@ func main() {
 	ret := flags.ProcessCommandLineArguments()
 	if ret == "RUN" {
 		if flags.EULACompliance() {
-			if !ucsSystems.CheckConfig(configName) {
+			if !ucsPerformance.CheckConfig(configName) {
 				fmt.Println("The config file could not be found.  Please check and try again.")
 				os.Exit(0)
 			} else {
-				ucsSystems.Run()
+				ucsPerformance.Run()
+				if !ucsSystems.CheckConfig(configName) {
+					fmt.Println("The config file could not be found.  Please check and try again.")
+					os.Exit(0)
+				} else {
+					//ucsSystems.Run()
+				}
 			}
 		} else {
 			fmt.Println("Unable to continue until EULA has been agreed.")
