@@ -87,6 +87,15 @@ func LoadConfig(filename string) {
 	}
 }
 
+func EULACompliance() bool {
+	if viper.IsSet("EULA.agreed") {
+		if viper.GetBool("EULA.agreed") == true {
+			return true
+		}
+	}
+	return false
+}
+
 func createBlankConfig(filename string) {
 	if !functions.Exists(filename) {
 		viper.Set("eula.agreed", false)
@@ -164,7 +173,7 @@ func addUCSPMSystem(UCSIP net.IP, username, password string) bool {
 			if as.ToString(password) != "" {
 				viper.Set("ucspm.url", as.ToString(UCSIP))
 				viper.Set("ucspm.username", as.ToString(username))
-				viper.Set("ucspm.password", encryptPassword(as.ToString(password)))
+				viper.Set("ucspm.password", EncryptPassword(as.ToString(password)))
 				return true
 			} else {
 				fmt.Println("UCS Performance Manager password cannot be blank.")
@@ -205,7 +214,7 @@ func updateUCSSystem(UCSIP net.IP, addUCSUsername, addUCSPassword string) bool {
 	for i := 0; i < len(systems); i++ {
 		if systems[i].ip == as.ToString(UCSIP) {
 			systems[i].username = addUCSUsername
-			systems[i].password = encryptPassword(addUCSPassword)
+			systems[i].password = EncryptPassword(addUCSPassword)
 		}
 	}
 	return true
@@ -230,11 +239,11 @@ func getAllSystems() {
 	readSystems(tmp)
 }
 
-func encryptPassword(password string) string {
+func EncryptPassword(password string) string {
 	return functions.Encrypt(key, []byte(password))
 }
 
-func decryptPassword(password string) string {
+func DecryptPassword(password string) string {
 	return functions.Decrypt(key, password)
 }
 
@@ -242,7 +251,7 @@ func addUCSSystem(addUCSIP net.IP, addUCSUsername, addUCSPassword string) bool {
 	tmp := System{}
 	tmp.ip = addUCSIP.String()
 	tmp.username = addUCSUsername
-	tmp.password = encryptPassword(addUCSPassword)
+	tmp.password = EncryptPassword(addUCSPassword)
 	systems = append(systems, tmp)
 	return true
 }
