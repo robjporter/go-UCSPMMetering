@@ -13,7 +13,10 @@ Once this has completed, open a cmd or terminal window and check GO has been ins
 
 Enter <b>echo $GOPATH</b>, hopefully you will be presented with a path and should be ready to go.
 
-<img src="images/cmd.png">
+```fish
+> echo $GOPATH
+/path/to/go/bin/src/pkg folders
+```
 
 ## Testing your GO environment
 Once you have completed the above, its time to create a very simple test script to ensure everything is ready.
@@ -49,9 +52,9 @@ There are a couple of ways you can get the code, depending on how comfortable yo
 You could download the zip file, [here](https://github.com/robjporter/go-UCSPMMetering/archive/master.zip).
 
 You could use the command line git command to clone the repository to your local machine;
-1) At the command line, change directory using cd to the directory where the repository will be stored.
-2) Enter, git clone https://github.com/robjporter/go-UCSPMMetering.git
-3) You will see output similar to the following while it is copied.
+1. At the command line, change directory using cd to the directory where the repository will be stored.
+2. Enter, git clone https://github.com/robjporter/go-UCSPMMetering.git
+3. You will see output similar to the following while it is copied.
 ```fish
 Cloning into `go-UCSPMMetering`...
 remote: Counting objects: 10, done.
@@ -59,7 +62,7 @@ remote: Compressing objects 100% (8/8), done.
 remove: Total 10 (delta 1), reused 10 (delta 1)
 unpacking objects: 100% (10/10), done.
 ```
-4) Change into the new directory, cd go-UCSPMMetering.
-5) Move onto setting up the application.
+4. Change into the new directory, cd go-UCSPMMetering.
+5. Move onto setting up the application.
 
 ## Setting up application
