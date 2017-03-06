@@ -66,3 +66,22 @@ unpacking objects: 100% (10/10), done.
 5. Move onto setting up the application.
 
 ## Setting up the application
+You need to add the UCS and UCS Performance Manager systems to the application.  Your password will be encrypted before it is stored, however usernames will remain in plain text.  This should be a read only account on both systems, so should not cause too much of a security risk.
+
+### Add UCS Domain
+Repeat this process as many times as needed.
+```go
+> go run main.go add ucs --ip=<IP> --username=<USERNAME> --password=<PASSWORD>
+```
+
+### Add UCS Performance Manager
+This can only be done once.  No provision has currently been made for multiple UCS Performance Manager systems.
+```go
+> go run main.go add ucspm --ip=<IP> --username=<USERNAME> --password=<PASSWORD>
+```
+
+## Running the application
+Once the UCS and UCS Performance Manager systems have been added, the application is now ready to run.
+```go
+> go run main.go run
+```
