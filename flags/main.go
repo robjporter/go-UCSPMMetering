@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"../eula"
+
 	functions "github.com/robjporter/go-functions"
 	"github.com/robjporter/go-functions/as"
 	"github.com/robjporter/go-functions/kingpin"
@@ -78,9 +80,9 @@ func LoadConfig(filename string) {
 	viper.SetConfigName(configName)
 	viper.SetConfigType(configExtension)
 	viper.AddConfigPath(configPath)
+	ConfigFile = filename
 
 	createBlankConfig(filename)
-	ConfigFile = filename
 	err := viper.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
@@ -94,6 +96,14 @@ func EULACompliance() bool {
 		}
 	}
 	return false
+}
+
+func DisplayEULA() {
+	answer := eula.DisplayEULA()
+	if answer {
+		viper.Set("eula.agreed", true)
+		saveConfig()
+	}
 }
 
 func createBlankConfig(filename string) {

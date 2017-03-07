@@ -2,45 +2,10 @@ package eula
 
 import (
 	"fmt"
-	"os"
-
-	"github.com/robjporter/go-functions/banner"
-	"github.com/robjporter/go-functions/colors"
-	"github.com/robjporter/go-functions/menu"
-	"github.com/robjporter/go-functions/terminal"
-	"github.com/spf13/viper"
+	"log"
 )
 
-func drawHeader() {
-	terminal.ClearScreen()
-	banner.PrintNewFigure("UCS", "rounded", true)
-	fmt.Println(colors.Color("Cisco Unified Computing System", colors.BRIGHTYELLOW))
-	banner.BannerPrintLineS("=", 60)
-	fmt.Println("\n\n")
-}
-
-func drawMenus() bool {
-	drawHeader()
-	fmt.Println(colors.Bold("By accepting you agree you have read, understand and acknowledge the EULA agreement as set out for this software.\n"))
-	fmt.Println("")
-	menus := menu.NewButtonMenu("", "Choose an action")
-	menus.AddMenuItem("If you are unsure, please exit this application now!", "exit")
-	menus.AddMenuItem("If you would like to read the EULA", "eula")
-	menus.AddMenuItem("You agree to the EULA and accept liability for using this software", "continue")
-	action, escaped := menus.Run()
-	if escaped || action == "exit" {
-		os.Exit(0)
-	}
-	if action == "eula" {
-		displayEULA()
-	} else if action == "continue" {
-		viper.Set("EULA.agreed", true)
-		return true
-	}
-	return false
-}
-
-func displayEULA() {
+func DisplayEULA() bool {
 	fmt.Println(`
 	Software License Agreement
 
@@ -68,6 +33,49 @@ func displayEULA() {
 
 	12. This License Agreement is valid without Licensor's signature. It becomes effective upon the earlier of Licensee's signature or Licensee's use of the Software.`)
 
-	fmt.Println("\nPress enter to return\n")
+	fmt.Println("\nPress read and confirm acceptance with y/Y/yes/YES")
 
+	output := askForConfirmation()
+
+	return output
+
+}
+
+// askForConfirmation uses Scanln to parse user input. A user must type in "yes" or "no" and
+// then press enter. It has fuzzy matching, so "y", "Y", "yes", "YES", and "Yes" all count as
+// confirmations. If the input is not recognized, it will ask again. The function does not return
+// until it gets a valid response from the user. Typically, you should use fmt to print out a question
+// before calling askForConfirmation. E.g. fmt.Println("WARNING: Are you sure? (yes/no)")
+func askForConfirmation() bool {
+	var response string
+	_, err := fmt.Scanln(&response)
+	if err != nil {
+		log.Fatal(err)
+	}
+	okayResponses := []string{"y", "Y", "yes", "Yes", "YES"}
+	nokayResponses := []string{"n", "N", "no", "No", "NO"}
+	if containsString(okayResponses, response) {
+		return true
+	} else if containsString(nokayResponses, response) {
+		return false
+	} else {
+		fmt.Println("Please type yes or no and then press enter:")
+		return askForConfirmation()
+	}
+}
+
+// posString returns the first index of element in slice.
+// If slice does not contain element, returns -1.
+func posString(slice []string, element string) int {
+	for index, elem := range slice {
+		if elem == element {
+			return index
+		}
+	}
+	return -1
+}
+
+// containsString returns true iff slice contains element
+func containsString(slice []string, element string) bool {
+	return !(posString(slice, element) == -1)
 }

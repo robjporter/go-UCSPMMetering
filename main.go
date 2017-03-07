@@ -19,7 +19,7 @@ var (
 func init() {
 	flags.LoadConfig(configName)
 	if !flags.EULACompliance() {
-		fmt.Println("EULA NEEDS AGREEMENT")
+		flags.DisplayEULA()
 	}
 }
 
