@@ -27,6 +27,7 @@ func (a *Application) init() {
 	a.username = ""
 	a.password = ""
 	a.outputFile = ""
+	a.DEBUG = false
 	a.setupRouters()
 }
 
@@ -75,10 +76,10 @@ func (a *Application) Run() {
 }
 
 func (a *Application) setDefaults() {
-	if viper.IsSet("output.file") {
-		a.outputFile = viper.GetString("output.file")
+	if viper.IsSet("input.file") {
+		a.outputFile = viper.GetString("input.file")
 	} else {
-		a.outputFile = "output.csv"
+		a.outputFile = "input.json"
 	}
 	if viper.IsSet("ucspm.url") {
 		a.host = "https://" + viper.GetString("ucspm.url") + "/"
@@ -105,7 +106,27 @@ func (a *Application) start() {
 		a.markIgnoreUIDS()
 		a.addHostsUnderVcenters()
 		a.getUUIDForDevices()
-		a.saveUUID(outputUUID())
+		a.saveUUID(a.outputUUID())
+		if a.DEBUG {
+			a.debug()
+		}
+	}
+}
+
+func (a *Application) debug() {
+	for i := 0; i < len(a.devices); i++ {
+		fmt.Println("======================================================")
+		fmt.Println("UID:> ", a.devices[i].uid)
+		fmt.Println("UUID:> ", a.devices[i].uuid)
+		fmt.Println("NAME:> ", a.devices[i].name)
+		fmt.Println("UCSPM NAME:> ", a.devices[i].ucspmName)
+		fmt.Println("MODEL:> ", a.devices[i].model)
+		fmt.Println("IGNORE:> ", a.devices[i].ignore)
+		fmt.Println("HYPERVISOR NAME:> ", a.devices[i].hypervisorName)
+		fmt.Println("HYPERVISOR VERSION:> ", a.devices[i].hypervisorVersion)
+		fmt.Println("HYPERVISOR:> ", a.devices[i].hypervisor)
+		fmt.Println("HAS HYPERVISOR:> ", a.devices[i].hasHypervisor)
+		fmt.Println("======================================================")
 	}
 }
 
@@ -137,7 +158,7 @@ func (a *Application) outputUUID() string {
 	}
 
 	fmt.Println("Removing duplicate UUID")
-	uuid = removeDuplicates(uuid)
+	uuid = a.removeDuplicates(uuid)
 
 	for i := 0; i < len(uuid); i++ {
 		jsonStr += `"` + uuid[i] + `",`
@@ -154,7 +175,7 @@ func (a *Application) getUUIDForDevices() {
 	fmt.Println("Getting UUID for all standalone servers")
 	for i := 0; i < len(a.devices); i++ {
 		if !a.devices[i].ignore {
-			dev, err := getDeviceDetails(a.devices[i])
+			dev, err := a.getDeviceDetails(a.devices[i])
 			if err == nil {
 				tmp := device{}
 				if dev != tmp {
@@ -193,7 +214,7 @@ func (a *Application) generateUCSPMName(dev device) string {
 
 func (a *Application) getDeviceDetails(dev device) (device, error) {
 	if dev.hasHypervisor == true {
-		tmp, err := getHypervisorDeviceDetail(dev)
+		tmp, err := a.getHypervisorDeviceDetail(dev)
 		if err == nil {
 			return tmp, nil
 		} else {
@@ -201,7 +222,7 @@ func (a *Application) getDeviceDetails(dev device) (device, error) {
 		}
 	} else {
 		if strings.Contains(dev.uid, "/zport/dmd/Devices/vSphere") {
-			tmp, err := getStandaloneVsphereDeviceDetail(dev)
+			tmp, err := a.getStandaloneVsphereDeviceDetail(dev)
 			if err == nil {
 				return tmp, nil
 			} else {
@@ -272,7 +293,9 @@ func (a *Application) getHypervisorDeviceDetail(dev device) (device, error) {
 				model, err2 := jmespath.Search("result.data.hardwareModel", data2)
 				name, err3 := jmespath.Search("result.data.hostname", data2)
 				hypname, err4 := jmespath.Search("result.data.hostname", data2)
-				fmt.Printf("Adding server: %s with UID: %s\n", as.ToString(name), dev.uid)
+				if a.DEBUG {
+					fmt.Printf("Adding server: %s with UID: %s\n", as.ToString(name), dev.uid)
+				}
 
 				if err == nil && err2 == nil && err3 == nil && err4 == nil {
 					dev.name = as.ToString(name)
@@ -280,7 +303,7 @@ func (a *Application) getHypervisorDeviceDetail(dev device) (device, error) {
 					dev.model = as.ToString(model)
 					dev.hypervisorName = as.ToString(hypname)
 					dev.hypervisor = true
-					dev.ucspmName = generateUCSPMName(dev)
+					dev.ucspmName = a.generateUCSPMName(dev)
 					return dev, nil
 				} else {
 					return device{}, errors.New("Unknown hardware device")
@@ -293,6 +316,7 @@ func (a *Application) getHypervisorDeviceDetail(dev device) (device, error) {
 
 func (a *Application) addHostsUnderVcenters() {
 	fmt.Println("Adding servers under Hypervisors")
+	totalCount := 0
 	for i := 0; i < len(a.devices); i++ {
 		if a.devices[i].hypervisor {
 			jsonStr := `{"action":"DeviceRouter","method":"getComponents","data":[{"uid":"/zport/dmd/Devices/vSphere/devices/vCenter","keys":["uid","id","title","name","hypervisorVersion","totalMemory","uuid"],"meta_type":"vSphereHostSystem","sort":"name","dir":"ASC"}],"tid":` + as.ToString(a.tidCount) + `}`
@@ -315,7 +339,9 @@ func (a *Application) addHostsUnderVcenters() {
 								version, err2 := jmespath.Search("result.data["+as.ToString(i)+"].hypervisorVersion", data2)
 								uid, err4 := jmespath.Search("result.data["+as.ToString(i)+"].uid", data2)
 								name, err5 := jmespath.Search("result.data["+as.ToString(i)+"].name", data2)
-								fmt.Printf("Adding server: %s \n", as.ToString(name))
+								if a.DEBUG {
+									fmt.Printf("Adding server: %s \n", as.ToString(name))
+								}
 								if err2 == nil && err4 == nil && err5 == nil {
 									var dev device
 									dev.ignore = false
@@ -333,6 +359,7 @@ func (a *Application) addHostsUnderVcenters() {
 									}
 
 									a.devices = append(a.devices, dev)
+									totalCount++
 								}
 							}
 						}
@@ -341,6 +368,7 @@ func (a *Application) addHostsUnderVcenters() {
 			}
 		}
 	}
+	fmt.Println("Added ", totalCount, " servers under a Hypervisor")
 }
 
 func (a *Application) markIgnoreUIDS() {
@@ -410,7 +438,7 @@ func (a *Application) getDevices(router string, method string, data string) ([]d
 									tmp.ignore = false
 									tmp.name = as.ToString(name)
 									if err3 == nil {
-										tmp.hypervisor = isVcenter(as.ToString(name))
+										tmp.hypervisor = a.isVcenter(as.ToString(name))
 									}
 									devs = append(devs, tmp)
 								}

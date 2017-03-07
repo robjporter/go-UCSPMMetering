@@ -37,7 +37,7 @@ func main() {
 					fmt.Println("The config file could not be found.  Please check and try again.")
 					os.Exit(0)
 				} else {
-					//ucsSystems.Run()
+					ucsSystems.Run()
 				}
 			}
 		} else {
