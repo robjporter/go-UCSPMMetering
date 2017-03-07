@@ -79,6 +79,12 @@ unpacking objects: 100% (10/10), done.
 4. Change into the new directory, cd go-UCSPMMetering.
 5. Move onto setting up the application.
 
+## Application dependencies
+For the application to work correctly, we need to get one dependency and we can achieve that with the following, via the cmd line.
+```fish
+> go get -u github.com/robjporter/go-functions
+```
+
 ## Setting up the application
 You need to add the UCS and UCS Performance Manager systems to the application.  Your password will be encrypted before it is stored, however usernames will remain in plain text.  This should be a read only account on both systems, so should not cause too much of a security risk.
 
