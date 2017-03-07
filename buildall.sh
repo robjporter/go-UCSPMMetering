@@ -1,16 +1,16 @@
 #!/bin/bash
 echo "Building Linux x86"
-env GOOS=linux GOARCH=386 go build -o bin/ucspm-linux-x86
+env GOOS=linux GOARCH=386 go build -a -o bin/ucspm-linux-x86
 echo "Building Linux amd64"
-env GOOS=linux GOARCH=amd64 go build -o bin/ucspm-linux-amd64
+env GOOS=linux GOARCH=amd64 go build -a -o bin/ucspm-linux-amd64
 echo "Building Mac amd64"
-env GOOS=darwin GOARCH=amd64 go build -o bin/ucspm-mac
+env GOOS=darwin GOARCH=amd64 go build -a -o bin/ucspm-mac
 echo "Building Solaris amd64"
-env GOOS=solaris GOARCH=amd64 go build -o bin/ucspm-solaris
+env GOOS=solaris GOARCH=amd64 go build -a -o bin/ucspm-solaris
 echo "Building Windows x86"
-env GOOS=windows GOARCH=386 go build -o bin/ucspm-windows-x86
+env GOOS=windows GOARCH=386 go build -a -o bin/ucspm-windows-x86
 echo "Building Windows amd64"
-env GOOS=windows GOARCH=amd64 go build -o bin/ucspm-windows-amd64
+env GOOS=windows GOARCH=amd64 go build -a -o bin/ucspm-windows-amd64
 echo "Building complete"
 
 

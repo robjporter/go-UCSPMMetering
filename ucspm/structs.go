@@ -14,13 +14,15 @@ type device struct {
 }
 
 type Application struct {
-	configFile string
-	routers    map[string]string
-	devices    []device
-	DEBUG      bool
-	tidCount   int
-	host       string
-	username   string
-	password   string
-	outputFile string
+	configFile  string
+	routers     map[string]string
+	devices     []device
+	DEBUG       bool
+	tidCount    int
+	host        string
+	username    string
+	password    string
+	outputFile  string
+	reportYear  string
+	reportMonth string
 }

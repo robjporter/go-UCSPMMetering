@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 
 	"./flags"
+	"./functions"
 	"./ucs"
 	"./ucspm"
 )
@@ -32,13 +34,40 @@ func init() {
 func main() {
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	ret := flags.ProcessCommandLineArguments()
+	splits := strings.Split(ret, "|")
+	month := ""
+	year := ""
+	if len(splits) == 3 {
+		if splits[0] == "RUN" {
+			if splits[1] == "" {
+				month = functions.CurrentMonthName()
+			} else {
+				tmp := functions.IsMonth(splits[1])
+				if tmp != "" {
+					month = tmp
+				} else {
+					month = functions.CurrentMonthName()
+				}
+			}
+			if splits[2] == "" {
+				year = functions.CurrentYear()
+			} else {
+				tmp := functions.IsYear(splits[2])
+				if tmp != "" {
+					year = tmp
+				} else {
+					year = functions.CurrentYear()
+				}
+			}
+		}
+	}
 	if ret == "RUN" {
 		if flags.EULACompliance() {
 			if !ucsPerformance.CheckConfig(configName) {
 				fmt.Println("The config file could not be found.  Please check and try again.")
 				os.Exit(0)
 			} else {
-				ucsPerformance.Run()
+				ucsPerformance.Run(month, year)
 				if !ucsSystems.CheckConfig(configName) {
 					fmt.Println("The config file could not be found.  Please check and try again.")
 					os.Exit(0)

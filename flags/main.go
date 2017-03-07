@@ -60,6 +60,9 @@ var (
 	outputFile = output.Flag("set", "Configure the output filename, where the UUID and serial numbers will be saved.").Required().String()
 	inputFile  = input.Flag("set", "Configure the input filename, where the UUID will be read from.").Required().String()
 
+	runMonth = run.Flag("month", "Month process utilisation for").String()
+	runYear  = run.Flag("year", "Year to process utilisation for").String()
+
 	ConfigFile = ""
 	systems    []System
 	key        = []byte("CiscoFinanceOpenPay12345")
@@ -284,7 +287,7 @@ func readSystems(ucss []interface{}) bool {
 func ProcessCommandLineArguments() string {
 	switch kingpin.Parse() {
 	case "run":
-		return "RUN"
+		return "RUN|" + *runMonth + "|" + *runYear
 	case "add ucs":
 		if !checkUCSExists(*addUCSIP) {
 			if addUCSSystem(*addUCSIP, *addUCSUsername, *addUCSPassword) {

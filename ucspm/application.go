@@ -69,7 +69,9 @@ func (a *Application) CheckConfig(filename string) bool {
 	}
 }
 
-func (a *Application) Run() {
+func (a *Application) Run(month string, year string) {
+	a.reportMonth = month
+	a.reportYear = year
 	a.loadConfig()
 	a.setDefaults()
 	a.start()
