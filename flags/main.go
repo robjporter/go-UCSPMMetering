@@ -98,12 +98,13 @@ func EULACompliance() bool {
 	return false
 }
 
-func DisplayEULA() {
+func DisplayEULA() bool {
 	answer := eula.DisplayEULA()
 	if answer {
 		viper.Set("eula.agreed", true)
 		saveConfig()
 	}
+	return answer
 }
 
 func createBlankConfig(filename string) {

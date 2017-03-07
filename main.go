@@ -19,7 +19,13 @@ var (
 func init() {
 	flags.LoadConfig(configName)
 	if !flags.EULACompliance() {
-		flags.DisplayEULA()
+		answer := flags.DisplayEULA()
+		if answer {
+			fmt.Println("Thank you for accetping the End User License Agreemeent.  Please run the application again.")
+		} else {
+			fmt.Println("You will need to agree to the End User License Agreement before being able to use the application.")
+		}
+		os.Exit(0)
 	}
 }
 
