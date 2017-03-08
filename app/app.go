@@ -70,7 +70,7 @@ func (a *Application) init() {
 	a.Logger.Out = os.Stdout
 	a.Logger.Level = logrus.DebugLevel
 	customFormatter := new(logrus.TextFormatter)
-	customFormatter.TimestampFormat = "02-01-2006 15:04:05"
+	customFormatter.TimestampFormat = "02-01-2006 15:04:05.000"
 	customFormatter.FullTimestamp = true
 	a.Logger.Formatter = customFormatter
 	a.Key = []byte("CiscoFinanceOpenPay12345")
@@ -111,7 +111,14 @@ func (a *Application) LoadConfig() {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 		os.Exit(0)
 	}
+	a.indexConfig()
 	a.Log("Configuration File read successfully", nil, true)
+}
+
+func (a *Application) indexConfig() {
+	a.Status.ucsCount = a.getAllUCSSystemsCount()
+	a.Status.ucspmCount = a.getAllUCSPMSystemsCount()
+	a.Status.eula = a.getEULAStatus()
 }
 
 func (a *Application) Log(message string, fields map[string]interface{}, debugMessage bool) {

@@ -14,9 +14,24 @@ type UCSSystemInfo struct {
 	version  string
 }
 
+type UCSPMInfo struct {
+	Routers  map[string]string
+	TidCount int
+	Devices  []UCSPMDeviceInfo
+	host     string
+	username string
+	password string
+}
+
 type ReportInfo struct {
 	Month string
 	Year  string
+}
+
+type AppStatus struct {
+	eula       bool
+	ucsCount   int
+	ucspmCount int
 }
 
 type Application struct {
@@ -27,4 +42,19 @@ type Application struct {
 	Logger     *logrus.Logger
 	Key        []byte
 	Report     ReportInfo
+	Status     AppStatus
+	UCSPM      UCSPMInfo
+}
+
+type UCSPMDeviceInfo struct {
+	uid               string
+	uuid              string
+	ignore            bool
+	name              string
+	model             string
+	hypervisor        bool
+	hypervisorName    string
+	hypervisorVersion string
+	ucspmName         string
+	hasHypervisor     bool
 }

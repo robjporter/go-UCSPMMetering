@@ -132,6 +132,27 @@ func (a *Application) getAllSystems() {
 	a.Log("Located UCS Systems in the config file", map[string]interface{}{"Systems": len(tmp)}, true)
 	a.readSystems(tmp)
 }
+
+func (a *Application) getAllUCSSystemsCount() int {
+	tmp := as.ToSlice(a.Config.Get("ucs.systems"))
+	return len(tmp)
+}
+
+func (a *Application) getAllUCSPMSystemsCount() int {
+	if a.Config.IsSet("ucspm.url") {
+		return 1
+	} else {
+		return 0
+	}
+}
+
+func (a *Application) getEULAStatus() bool {
+	if a.Config.IsSet("eula.agreed") {
+		return true
+	}
+	return false
+}
+
 func (a *Application) processResponse(response string) {
 	a.Log("Processing command line options.", map[string]interface{}{"args": response}, true)
 	splits := strings.Split(response, "|")
