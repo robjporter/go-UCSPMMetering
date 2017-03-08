@@ -1,4 +1,4 @@
-package ucs
+package ucspm
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 )
 
 func PrintGreeting() {
-	fmt.Println("UCS")
+	fmt.Println("UCSPM")
 	app.Run("TEST")
 	fmt.Println(app.App.ConfigFile)
 	app.App.Run2()

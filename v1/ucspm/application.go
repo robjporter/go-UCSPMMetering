@@ -14,7 +14,10 @@ import (
 	jmespath "github.com/jmespath/go-jmespath"
 	functions "github.com/robjporter/go-functions"
 	"github.com/robjporter/go-functions/as"
+	"github.com/robjporter/go-functions/banner"
+	"github.com/robjporter/go-functions/colors"
 	"github.com/robjporter/go-functions/http"
+	"github.com/robjporter/go-functions/terminal"
 	"github.com/robjporter/go-functions/viper"
 )
 
@@ -69,9 +72,22 @@ func (a *Application) CheckConfig(filename string) bool {
 	}
 }
 
-func (a *Application) Run(month string, year string) {
+func (a *Application) drawHeader() {
+	terminal.ClearScreen()
+	banner.PrintNewFigure("UCSPM", "rounded", true)
+	fmt.Println(colors.Color("Cisco Unified Computing System Performance Manager", colors.BRIGHTYELLOW))
+	banner.BannerPrintLineS("=", 60)
+	fmt.Println("\n\n")
+}
+
+func (a *Application) RunReports(month string, year string) {
 	a.reportMonth = month
 	a.reportYear = year
+	a.drawHeader()
+	fmt.Println("RUNNING REPORTS")
+}
+
+func (a *Application) Run() {
 	a.loadConfig()
 	a.setDefaults()
 	a.start()
@@ -102,6 +118,7 @@ func (a *Application) loadConfig() {
 }
 
 func (a *Application) start() {
+	a.drawHeader()
 	err := errors.New("")
 	a.devices, err = a.getDevices("device", "getDevices", `[{"uid": "/zport/dmd/Devices"}]`)
 	if err == nil {

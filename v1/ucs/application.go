@@ -365,3 +365,11 @@ func (a *Application) processInfo() {
 	a.processMatchedUUID()
 	a.exportToCSV()
 }
+
+func (a *Application) GetMatches() []match {
+	return a.matched
+}
+
+func (a *Application) GetUnMatched() []string {
+	return a.unmatched
+}
