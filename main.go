@@ -5,7 +5,7 @@ import (
 )
 
 func main() {
-	app.Core.Debug = false
+	app.Core.Debug = true
 	app.Core.ConfigFile = "./config.yaml"
 	app.Core.LoadConfig()
 	app.Core.Run()

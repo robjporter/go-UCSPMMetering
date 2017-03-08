@@ -4,7 +4,6 @@ import (
 	"os"
 
 	"../eula"
-	"../ucs"
 )
 
 func (a *Application) RunStage2() {
@@ -52,6 +51,17 @@ func (a *Application) RunStage4() {
 	a.LogInfo("Entering Run stage 4", nil, false)
 	a.ucspmInit()
 	a.ucspmInventory()
+	a.RunStage5()
+}
 
-	ucs.PrintGreeting()
+func (a *Application) RunStage5() {
+	a.LogInfo("Entering Run stage 5", nil, false)
+	a.ucsInit()
+	a.ucsInventory()
+}
+
+func (a *Application) RunStage6() {
+	a.LogInfo("Entering Run stage 6", nil, false)
+	//a.ucsInit()
+	//a.ucsInventory()
 }

@@ -14,6 +14,30 @@ type UCSSystemInfo struct {
 	version  string
 }
 
+type UCSSysteMatchInfo struct {
+	serverposition string
+	serverserial   string
+	serveruuid     string
+	servername     string
+	serverpid      string
+	serverdn       string
+	serverdescr    string
+	servermodel    string
+	serverouuid    string
+	ucsname        string
+	ucsversion     string
+	ucsip          string
+}
+
+type UCSInfo struct {
+	configFile string
+	uuid       []string
+	systems    []UCSSystemInfo
+	matches    []UCSSysteMatchInfo
+	matched    []UCSSysteMatchInfo
+	unmatched  []string
+}
+
 type UCSPMInfo struct {
 	Routers  map[string]string
 	TidCount int
@@ -52,7 +76,7 @@ type UCSPMDeviceInfo struct {
 	ignore            bool
 	name              string
 	model             string
-	hypervisor        bool
+	ishypervisor      bool
 	hypervisorName    string
 	hypervisorVersion string
 	ucspmName         string
