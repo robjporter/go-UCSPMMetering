@@ -155,6 +155,7 @@ func (a *Application) ucspmOutputUUID() string {
 
 	a.LogInfo("Removing duplicates from UUID list.", nil, false)
 	uuid = a.ucspmRemoveDuplicates(uuid)
+	a.UCSPM.ProcessedUUID = uuid
 	a.LogInfo("Identified unique UUID list.", map[string]interface{}{"UUID": len(uuid)}, false)
 
 	for i := 0; i < len(uuid); i++ {

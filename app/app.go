@@ -29,6 +29,7 @@ func (a *Application) createBlankConfig(filename string) {
 		a.Config.Set("eula.agreed", false)
 		a.Config.Set("input.file", "uuid.json")
 		a.Config.Set("output.file", "output.csv")
+		a.Config.Set("debug", false)
 		a.saveConfig()
 	}
 }
@@ -119,6 +120,8 @@ func (a *Application) indexConfig() {
 	a.Status.ucsCount = a.getAllUCSSystemsCount()
 	a.Status.ucspmCount = a.getAllUCSPMSystemsCount()
 	a.Status.eula = a.getEULAStatus()
+	a.getAllSystems()
+	a.Debug = a.Config.GetBool("debug")
 }
 
 func (a *Application) Log(message string, fields map[string]interface{}, debugMessage bool) {
@@ -149,15 +152,25 @@ func (a *Application) LogInfo(message string, fields map[string]interface{}, inf
 	}
 }
 
+func (a *Application) LogWarn(message string, fields map[string]interface{}, warnMessage bool) {
+	if warnMessage && a.Debug || !warnMessage {
+		if fields != nil {
+			a.Logger.WithFields(fields).Warn(message)
+		} else {
+			a.Logger.Warn(message)
+		}
+	}
+}
+
 func (a *Application) processSystems() []interface{} {
 	var items []interface{}
 	var item map[string]interface{}
-	for i := 0; i < len(a.UCSSystems); i++ {
+	for i := 0; i < len(a.UCS.Systems); i++ {
 
 		item = make(map[string]interface{})
-		item["url"] = a.UCSSystems[i].ip
-		item["username"] = a.UCSSystems[i].username
-		item["password"] = a.UCSSystems[i].password
+		item["url"] = a.UCS.Systems[i].ip
+		item["username"] = a.UCS.Systems[i].username
+		item["password"] = a.UCS.Systems[i].password
 		items = append(items, item)
 	}
 	return items
@@ -171,7 +184,7 @@ func (a *Application) Run() {
 
 func (a *Application) saveConfig() {
 	a.LogInfo("Saving configuration file.", nil, false)
-	if len(a.UCSSystems) > 0 {
+	if len(a.UCS.Systems) > 0 {
 		items := a.processSystems()
 		a.Config.Set("ucs.systems", items)
 	}

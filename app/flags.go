@@ -14,7 +14,7 @@ func (a *Application) addUCS(ip, username, password string) bool {
 				tmp.ip = ip
 				tmp.username = username
 				tmp.password = a.EncryptPassword(password)
-				a.UCSSystems = append(a.UCSSystems, tmp)
+				a.UCS.Systems = append(a.UCS.Systems, tmp)
 				return true
 			} else {
 				a.Log("The password for the UCS System cannot be blank.", nil, false)
@@ -76,8 +76,8 @@ func (a *Application) checkUCSExists(ip string) bool {
 	a.Log("Search for UCS System in config file", map[string]interface{}{"IP": ip}, true)
 	if a.Config.IsSet("ucs.systems") {
 		a.getAllSystems()
-		for i := 0; i < len(a.UCSSystems); i++ {
-			if strings.TrimSpace(a.UCSSystems[i].ip) == strings.TrimSpace(ip) {
+		for i := 0; i < len(a.UCS.Systems); i++ {
+			if strings.TrimSpace(a.UCS.Systems[i].ip) == strings.TrimSpace(ip) {
 				return true
 			}
 		}
@@ -95,9 +95,9 @@ func (a *Application) checkUCSPMExists(ip string) bool {
 }
 
 func (a *Application) deleteUCS(ip string) bool {
-	for i := 0; i < len(a.UCSSystems); i++ {
-		if a.UCSSystems[i].ip == as.ToString(ip) {
-			a.UCSSystems = append(a.UCSSystems[:i], a.UCSSystems[i+1:]...)
+	for i := 0; i < len(a.UCS.Systems); i++ {
+		if a.UCS.Systems[i].ip == as.ToString(ip) {
+			a.UCS.Systems = append(a.UCS.Systems[:i], a.UCS.Systems[i+1:]...)
 		}
 	}
 	return true
@@ -184,7 +184,7 @@ func (a *Application) processResponse(response string) {
 	}
 }
 func (a *Application) readSystems(ucss []interface{}) bool {
-	a.UCSSystems = nil
+	a.UCS.Systems = nil
 	for i := 0; i < len(ucss); i++ {
 		var newlist map[string]string
 		newlist = as.ToStringMapString(ucss[i])
@@ -192,7 +192,7 @@ func (a *Application) readSystems(ucss []interface{}) bool {
 		tmp.ip = newlist["url"]
 		tmp.username = newlist["username"]
 		tmp.password = newlist["password"]
-		a.UCSSystems = append(a.UCSSystems, tmp)
+		a.UCS.Systems = append(a.UCS.Systems, tmp)
 	}
 
 	return true
@@ -217,11 +217,11 @@ func (a *Application) setOutputFileName(filename string) {
 }
 
 func (a *Application) showUCS(ip string) {
-	for i := 0; i < len(a.UCSSystems); i++ {
-		if a.UCSSystems[i].ip == as.ToString(ip) {
-			a.LogInfo("UCS Domain", map[string]interface{}{"URL": a.UCSSystems[i].ip}, false)
-			a.LogInfo("UCS Domain", map[string]interface{}{"Username": a.UCSSystems[i].username}, false)
-			a.LogInfo("UCS Domain", map[string]interface{}{"Password": a.UCSSystems[i].password}, false)
+	for i := 0; i < len(a.UCS.Systems); i++ {
+		if a.UCS.Systems[i].ip == as.ToString(ip) {
+			a.LogInfo("UCS Domain", map[string]interface{}{"URL": a.UCS.Systems[i].ip}, false)
+			a.LogInfo("UCS Domain", map[string]interface{}{"Username": a.UCS.Systems[i].username}, false)
+			a.LogInfo("UCS Domain", map[string]interface{}{"Password": a.UCS.Systems[i].password}, false)
 		}
 	}
 }
@@ -236,10 +236,10 @@ func (a *Application) showUCSSystem(ip string) {
 
 func (a *Application) showUCSSystems() {
 	a.getAllSystems()
-	for i := 0; i < len(a.UCSSystems); i++ {
-		a.LogInfo("UCS Domain", map[string]interface{}{"URL": a.UCSSystems[i].ip}, false)
-		a.LogInfo("UCS Domain", map[string]interface{}{"Username": a.UCSSystems[i].username}, false)
-		a.LogInfo("UCS Domain", map[string]interface{}{"Password": a.UCSSystems[i].password}, false)
+	for i := 0; i < len(a.UCS.Systems); i++ {
+		a.LogInfo("UCS Domain", map[string]interface{}{"URL": a.UCS.Systems[i].ip}, false)
+		a.LogInfo("UCS Domain", map[string]interface{}{"Username": a.UCS.Systems[i].username}, false)
+		a.LogInfo("UCS Domain", map[string]interface{}{"Password": a.UCS.Systems[i].password}, false)
 	}
 	a.showUCSPMSystem()
 }
@@ -253,10 +253,10 @@ func (a *Application) showUCSPMSystem() {
 }
 
 func (a *Application) updateUCS(ip, username, password string) bool {
-	for i := 0; i < len(a.UCSSystems); i++ {
-		if a.UCSSystems[i].ip == as.ToString(ip) {
-			a.UCSSystems[i].username = username
-			a.UCSSystems[i].password = a.EncryptPassword(password)
+	for i := 0; i < len(a.UCS.Systems); i++ {
+		if a.UCS.Systems[i].ip == as.ToString(ip) {
+			a.UCS.Systems[i].username = username
+			a.UCS.Systems[i].password = a.EncryptPassword(password)
 		}
 	}
 	return true

@@ -14,7 +14,7 @@ type UCSSystemInfo struct {
 	version  string
 }
 
-type UCSSysteMatchInfo struct {
+type UCSSystemMatchInfo struct {
 	serverposition string
 	serverserial   string
 	serveruuid     string
@@ -31,20 +31,21 @@ type UCSSysteMatchInfo struct {
 
 type UCSInfo struct {
 	configFile string
-	uuid       []string
-	systems    []UCSSystemInfo
-	matches    []UCSSysteMatchInfo
-	matched    []UCSSysteMatchInfo
-	unmatched  []string
+	UUID       []string
+	Systems    []UCSSystemInfo
+	Matches    []UCSSystemMatchInfo
+	Matched    []UCSSystemMatchInfo
+	Unmatched  []string
 }
 
 type UCSPMInfo struct {
-	Routers  map[string]string
-	TidCount int
-	Devices  []UCSPMDeviceInfo
-	host     string
-	username string
-	password string
+	Routers       map[string]string
+	TidCount      int
+	Devices       []UCSPMDeviceInfo
+	host          string
+	username      string
+	password      string
+	ProcessedUUID []string
 }
 
 type ReportInfo struct {
@@ -62,12 +63,12 @@ type Application struct {
 	ConfigFile string
 	Debug      bool
 	Config     *viper.Viper
-	UCSSystems []UCSSystemInfo
 	Logger     *logrus.Logger
 	Key        []byte
 	Report     ReportInfo
 	Status     AppStatus
 	UCSPM      UCSPMInfo
+	UCS        UCSInfo
 }
 
 type UCSPMDeviceInfo struct {

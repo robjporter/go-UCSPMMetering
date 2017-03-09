@@ -29,7 +29,6 @@ func (a *Application) RunStage2() {
 
 func (a *Application) RunStage3() {
 	a.LogInfo("Entering Run stage 3", nil, false)
-
 	if a.Status.eula == true {
 		if a.Status.ucsCount > 1 {
 			if a.Status.ucspmCount == 1 {
