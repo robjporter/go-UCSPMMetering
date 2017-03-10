@@ -4,12 +4,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
-	jmespath "github.com/jmespath/go-jmespath"
 	"github.com/robjporter/go-functions/as"
 	"github.com/robjporter/go-functions/http"
+	jmespath "github.com/robjporter/go-functions/jmespath"
 )
 
 func (a *Application) ucspmInit() {
@@ -121,6 +122,7 @@ func (a *Application) ucspmInventory() {
 		a.ucspmAddHostsUnderVcenters()
 		a.ucspmMarkDevicesToIgnore()
 		a.ucspmGetUUIDForDevices()
+		a.ucspmProcessDeviceDuplicates()
 		a.ucspmSaveUUID(a.ucspmOutputUUID())
 	}
 }
@@ -149,6 +151,8 @@ func (a *Application) ucspmOutputUUID() string {
 		if !a.UCSPM.Devices[i].ignore {
 			if a.UCSPM.Devices[i].uuid != "" {
 				uuid = append(uuid, a.UCSPM.Devices[i].uuid)
+			} else {
+				a.UCSPM.Devices[i].ignore = true
 			}
 		}
 	}
@@ -407,4 +411,28 @@ func (a *Application) ucspmMarkDevicesToIgnore() {
 		}
 	}
 	a.LogInfo("Marked devices we are not going to index.", map[string]interface{}{"Ignored": count}, false)
+}
+
+func (a *Application) ucspmProcessDeviceDuplicates() {
+	fmt.Println(a.ucspmGetNonIgnoredDevices())
+	a.ucspmProcessDiscoveredDevices()
+	fmt.Println(a.ucspmGetNonIgnoredDevices())
+}
+
+func (a *Application) ucspmProcessDiscoveredDevices() {
+
+}
+
+func (a *Application) ucspmGetNonIgnoredDevices() int {
+	count := 0
+	for i := 0; i < len(a.UCSPM.Devices); i++ {
+		if !a.UCSPM.Devices[i].ignore {
+			count++
+		}
+	}
+	return count
+}
+
+func (a *Application) ucspmProcessReports() {
+	a.LogInfo("Preparing to Process all data and request reports.", nil, false)
 }

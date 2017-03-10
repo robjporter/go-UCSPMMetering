@@ -7,7 +7,7 @@ import (
 )
 
 func (a *Application) RunStage2() {
-	a.LogInfo("Entering Run stage 2", nil, false)
+	a.LogInfo("Entering Run stage 2 - End User License Agreement checks", nil, false)
 	if a.Config.GetBool("eula.agreed") {
 		a.LogInfo("EULA has been agreed to.", nil, false)
 		a.RunStage3()
@@ -28,7 +28,7 @@ func (a *Application) RunStage2() {
 }
 
 func (a *Application) RunStage3() {
-	a.LogInfo("Entering Run stage 3", nil, false)
+	a.LogInfo("Entering Run stage 3 - Integrity Check", nil, false)
 	if a.Status.eula == true {
 		if a.Status.ucsCount > 1 {
 			if a.Status.ucspmCount == 1 {
@@ -47,20 +47,26 @@ func (a *Application) RunStage3() {
 }
 
 func (a *Application) RunStage4() {
-	a.LogInfo("Entering Run stage 4", nil, false)
+	a.LogInfo("Entering Run stage 4 - UCS Performance Manager", nil, false)
 	a.ucspmInit()
 	a.ucspmInventory()
 	a.RunStage5()
 }
 
 func (a *Application) RunStage5() {
-	a.LogInfo("Entering Run stage 5", nil, false)
+	a.LogInfo("Entering Run stage 5 - UCS Manager Systems", nil, false)
 	a.ucsInit()
 	a.ucsInventory()
 }
 
 func (a *Application) RunStage6() {
-	a.LogInfo("Entering Run stage 6", nil, false)
+	a.LogInfo("Entering Run stage 6 - UCS Performance Manager Reports", nil, false)
+	a.ucspmProcessReports()
+	a.RunStage7()
+}
+
+func (a *Application) RunStage7() {
+	a.LogInfo("Entering Run stage 7 - Finialising and Saving reports", nil, false)
 	//a.ucsInit()
 	//a.ucsInventory()
 }

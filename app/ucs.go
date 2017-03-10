@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/beevik/etree"
 	functions "github.com/robjporter/go-functions"
+	"github.com/robjporter/go-functions/etree"
 	"github.com/robjporter/go-functions/http"
 	"github.com/robjporter/go-functions/viper"
 )
