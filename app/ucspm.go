@@ -5,8 +5,14 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math/rand"
 	"os"
+	"sort"
+	"strconv"
 	"strings"
+	"time"
+
+	"../functions"
 
 	"github.com/robjporter/go-functions/as"
 	"github.com/robjporter/go-functions/http"
@@ -474,14 +480,13 @@ func (a *Application) ucspmGetNonIgnoredDevices() int {
 func (a *Application) ucspmProcessReports() {
 	a.LogInfo("Preparing to Process all data and request reports.", map[string]interface{}{"Requests": len(a.Results)}, false)
 
-	fmt.Println(a.UCS.Systems)
 	a.ucspmProcessDeviceDuplicates()
 	for i := 0; i < len(a.Results); i++ {
 		if a.Results[i].isManaged {
 			a.Results[i].ucspmKey = createUCSPMKey(a.Results[i].ucspmUID)
-			ucspmGetManagedReport(a.Results[i])
+			a.ucspmGetManagedReport(a.Results[i])
 		} else {
-			ucspmGetUnmanagedReport(a.Results[i])
+			a.ucspmGetUnmanagedReport(a.Results[i])
 		}
 	}
 }
@@ -492,28 +497,127 @@ func (a *Application) saveRunStage4() {
 }
 
 func (a *Application) saveRunStage6() {
-	//TODO:
-	fmt.Println("RUN STAGE 6")
+	a.LogInfo("Saving data from Run Stage 6.", nil, false)
+
+	jsonStr := `{"Results": [`
+
+	for i := 0; i < len(a.Results); i++ {
+
+		jsonStr += "{"
+		jsonStr += `"Name" : "` + a.Results[i].ucsName + `",`
+		jsonStr += `"Description" : "` + a.Results[i].ucsDesc + `",`
+		jsonStr += `"Model" : "` + a.Results[i].ucsModel + `",`
+		jsonStr += `"Serial" : "` + a.Results[i].ucsSerial + `",`
+		jsonStr += `"System" : "` + a.Results[i].ucsSystem + `",`
+		jsonStr += `"Position" : "` + a.Results[i].ucsPosition + `",`
+		jsonStr += `"DN" : "` + a.Results[i].ucsDN + `",`
+		jsonStr += `"IsManaged" : "` + as.ToString(a.Results[i].isManaged) + `",`
+		jsonStr += `"Name2" : "` + a.Results[i].ucspmName + `",`
+		jsonStr += `"UID" : "` + a.Results[i].ucspmUID + `",`
+		jsonStr += `"Key" : "` + a.Results[i].ucspmKey + `",`
+		jsonStr += `"UUID" : "` + a.Results[i].ucspmUUID + `"`
+		jsonStr += "},"
+	}
+
+	jsonStr = strings.TrimRight(jsonStr, ",")
+	jsonStr += `]}`
+
+	a.saveFile("Stage6-MergeResults.json", jsonStr)
 }
 
-func ucspmGetManagedReport(sys CombinedResults) {
-	fmt.Println("=========================================")
-	fmt.Println("IS MANAGED:> ", sys.isManaged)
-	fmt.Println("UCS DN:> ", sys.ucsDN)
-	fmt.Println("UCS DESCR:> ", sys.ucsDesc)
-	fmt.Println("UCS MODEL:> ", sys.ucsModel)
-	fmt.Println("UCS NAME:> ", sys.ucsName)
-	fmt.Println("UCS POSITION:> ", sys.ucsPosition)
-	fmt.Println("UCS SERIAL:> ", sys.ucsSerial)
-	fmt.Println("UCS SYSTEM:> ", sys.ucsSystem)
-	fmt.Println("UCSPM KEY:> ", sys.ucspmKey)
-	fmt.Println("UCSPM NAME:> ", sys.ucspmName)
-	fmt.Println("UCSPM UID:> ", sys.ucspmUID)
-	fmt.Println("UCSPM UUID:> ", sys.ucspmUUID)
-	fmt.Println("=========================================")
+func (a *Application) ucspmGetManagedReport(sys CombinedResults) {
+	a.LogInfo("Preparing to request all UCS Performance Manager reports, for managed devices.", nil, false)
+	start := functions.GetTimestampStartOfMonth(a.Report.Month, int(as.ToInt(a.Report.Year)))
+	end := functions.GetTimestampEndOfMonth(a.Report.Month, int(as.ToInt(a.Report.Year)))
+	jsonStr := `
+			{
+	"start": ` + as.ToString(start) + `,
+	"end": ` + as.ToString(end) + `,
+	"series": true,
+	"downsample": "1h-avg",
+	"tags": {},
+	"returnset": "EXACT",
+	"metrics": [{
+		"metric": "vCenter/cpuUsage_cpuUsage",
+		"rate": false,
+		"rateOptions": {},
+		"aggregator": "avg",
+		"tags": {
+			"key": ["` + sys.ucspmKey + `"]
+		},
+		"name": "Usage-raw",
+		"emit": false
+	}, {
+		"name": "Usage",
+		"expression": "rpn:Usage-raw,100,/"
+	}]
+}
+		`
+	url := a.makeUCSPMHostname() + "api/performance/query/"
+	headers := a.getHeaders()
+	a.LogInfo("Requesting report.", map[string]interface{}{"ReportStart": start, "ReportEnd": end, "UID": sys.ucspmUID, "Key": sys.ucspmKey, "URL": url}, false)
+
+	code, response, err := http.SendUnsecureHTTPSRequest(url, "POST", jsonStr, headers)
+
+	if err == nil {
+		if code == 200 {
+			if response != "" {
+				a.LogInfo("Successfully received response from UCSPM.", map[string]interface{}{"Code": code}, true)
+
+				var data2 interface{}
+				json.Unmarshal([]byte(response), &data2)
+
+				tmp, err := jmespath.Search("results[0].datapoints", data2)
+				if err == nil {
+					tmp2 := as.ToSlice(tmp)
+					a.LogInfo("Received Datapoints to process.", map[string]interface{}{"Datapoints": len(tmp2)}, true)
+					a.processReport(sys, tmp2)
+				}
+			}
+		}
+	}
 }
 
-func ucspmGetUnmanagedReport(sys CombinedResults) {
+func (a *Application) processReport(sys CombinedResults, data []interface{}) {
+	m := make(map[int]ReportData)
+	for i := 0; i < len(data); i++ {
+		tmp := as.ToStringMap(data[i])
+		ttmp := as.ToInt(strconv.FormatFloat(as.ToFloat(tmp["timestamp"]), 'f', 0, 64))
+		var temp ReportData
+		temp.timestamp = int(ttmp)
+		temp.value = as.ToFloat(tmp["value"])
+		m[i] = temp
+	}
+	s := make(dataSlice, 0, len(m))
+	for _, d := range m {
+		s = append(s, d)
+	}
+	sort.Sort(s)
+	a.outputProcessedReport(sys, s)
+}
+
+func (a *Application) outputProcessedReport(sys CombinedResults, data dataSlice) {
+	name := ""
+	if sys.ucspmName != "" {
+		name = sys.ucspmName
+	} else if sys.ucsName != "" {
+		name = sys.ucsName
+	} else {
+
+		rand.Seed(time.Now().UTC().UnixNano())
+		name = "server" + as.ToString(rand.Intn(1000-9999))
+	}
+
+	filename := name + "-" + sys.ucsSerial + "-" + a.Report.Month + "-" + as.ToString(a.Report.Year) + "-" + as.ToString(time.Now().Unix()) + ".csv"
+
+	csv := "timestamp,value\n"
+	for _, d := range data {
+		csv += as.ToString(d.timestamp) + "," + as.ToString(d.value) + "\n"
+	}
+	a.saveFile(filename, csv)
+}
+
+func (a *Application) ucspmGetUnmanagedReport(sys CombinedResults) {
 
 }
 

@@ -102,7 +102,8 @@ func (a *Application) cleanAll() {
 	os.Remove(a.Config.GetString("output.file"))
 	os.Remove("Stage4-UCSPM.json")
 	os.Remove("Stage5-UCS.json")
-	os.Remove("Stage6-UCSPM.json")
+	os.Remove("Stage6-MergeResults.json")
+	os.Remove("*.csv")
 	a.LogInfo("Successfully cleared all previously generated files.", nil, true)
 }
 
