@@ -49,7 +49,22 @@ func (a *Application) ucsProcessMatchedUUID() {
 	a.LogInfo("Successfully matched UUIDs.", map[string]interface{}{"Discovered": len(a.UCS.UUID), "Matched": len(a.UCS.Matched)}, true)
 	if len(a.UCS.Matched) < len(a.UCS.UUID) {
 		a.LogInfo("There were some unmatched UUID's.", map[string]interface{}{"Unmatched": a.UCS.Unmatched}, true)
+		a.saveUnmatchedUUID()
 	}
+}
+
+func (a *Application) saveUnmatchedUUID() {
+	a.LogInfo("Saving unmatched UUID.", map[string]interface{}{"Unmatched": len(a.UCS.Unmatched)}, false)
+
+	jsonStr := `{"uuids": [`
+	for i := 0; i < len(a.UCS.Unmatched); i++ {
+		jsonStr += `"` + a.UCS.Unmatched[i] + `",`
+	}
+
+	jsonStr = strings.TrimRight(jsonStr, ",")
+	jsonStr += `]}`
+
+	a.saveFile(a.Config.GetString("output.unmatched"), jsonStr)
 }
 
 func (a *Application) ucsRemoveMatched(list []string) {
@@ -61,7 +76,7 @@ func (a *Application) ucsRemoveMatched(list []string) {
 }
 
 func (a *Application) ucsReadUCSPMUUIDFile() {
-	filename := a.Config.GetString("input.file")
+	filename := a.Config.GetString("output.matched")
 	if functions.Exists(filename) {
 
 		var uuids = viper.New()
@@ -223,6 +238,33 @@ func (a *Application) ucsGetUCSData(sys UCSSystemInfo) {
 		mat.ucsversion = sys.version
 		a.UCS.Matches = append(a.UCS.Matches, mat)
 	}
+}
+
+func (a *Application) ucsGetUCSSystem(uuid string) UCSSystemMatchInfo {
+	for i := 0; i < len(a.UCS.Matched); i++ {
+		if a.UCS.Matched[i].serveruuid == uuid {
+			return a.UCS.Matched[i]
+		}
+	}
+	return UCSSystemMatchInfo{}
+}
+
+func (a *Application) saveRunStage5() {
+	a.LogInfo("Saving data from Run Stage 5.", nil, false)
+
+	jsonStr := `{"UCS": [`
+	for i := 0; i < len(a.UCS.Systems); i++ {
+		jsonStr += "{"
+		jsonStr += `"Name" : "` + a.UCS.Systems[i].name + `",`
+		jsonStr += `"IP" : "` + a.UCS.Systems[i].ip + `",`
+		jsonStr += `"Version" : "` + a.UCS.Systems[i].version + `"`
+		jsonStr += "},"
+	}
+
+	jsonStr = strings.TrimRight(jsonStr, ",")
+	jsonStr += `]}`
+
+	a.saveFile("Stage5-UCS.json", jsonStr)
 }
 
 /*

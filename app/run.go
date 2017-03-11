@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"os"
 
 	"../eula"
@@ -36,20 +37,23 @@ func (a *Application) RunStage3() {
 				a.RunStage4()
 			} else {
 				a.Log("The is no UCS Performance Manager system entered into the config file.", nil, false)
+				os.Exit(0)
 			}
 		} else {
 			a.Log("There is no UCS Systems entered into the config file.", nil, false)
+			os.Exit(0)
 		}
 	} else {
 		a.Log("The EULA needs to be agreed to before continuing.", nil, false)
+		os.Exit(0)
 	}
-	os.Exit(0)
 }
 
 func (a *Application) RunStage4() {
 	a.LogInfo("Entering Run stage 4 - UCS Performance Manager", nil, false)
 	a.ucspmInit()
 	a.ucspmInventory()
+	a.saveRunStage4()
 	a.RunStage5()
 }
 
@@ -57,16 +61,24 @@ func (a *Application) RunStage5() {
 	a.LogInfo("Entering Run stage 5 - UCS Manager Systems", nil, false)
 	a.ucsInit()
 	a.ucsInventory()
+	a.saveRunStage5()
+	a.RunStage6()
 }
 
 func (a *Application) RunStage6() {
 	a.LogInfo("Entering Run stage 6 - UCS Performance Manager Reports", nil, false)
 	a.ucspmProcessReports()
+	a.saveRunStage6()
 	a.RunStage7()
 }
 
 func (a *Application) RunStage7() {
 	a.LogInfo("Entering Run stage 7 - Finialising and Saving reports", nil, false)
+	a.saveRunStage7()
 	//a.ucsInit()
 	//a.ucsInventory()
+}
+
+func (a *Application) saveRunStage7() {
+	fmt.Println("RUN STAGE 7")
 }

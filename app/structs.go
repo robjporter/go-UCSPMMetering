@@ -59,6 +59,21 @@ type AppStatus struct {
 	ucspmCount int
 }
 
+type CombinedResults struct {
+	ucspmName   string
+	ucspmUID    string
+	ucspmKey    string
+	ucspmUUID   string
+	ucsName     string
+	ucsPosition string
+	ucsSerial   string
+	ucsDN       string
+	ucsDesc     string
+	ucsModel    string
+	ucsSystem   string
+	isManaged   bool
+}
+
 type Application struct {
 	ConfigFile string
 	Debug      bool
@@ -69,6 +84,7 @@ type Application struct {
 	Status     AppStatus
 	UCSPM      UCSPMInfo
 	UCS        UCSInfo
+	Results    []CombinedResults
 }
 
 type UCSPMDeviceInfo struct {

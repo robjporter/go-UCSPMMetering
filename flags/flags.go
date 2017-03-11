@@ -13,6 +13,7 @@ var (
 	run    = kingpin.Command("run", "Run the main application.")
 	output = kingpin.Command("output", "Configure the output file.")
 	input  = kingpin.Command("input", "Configure the input file.")
+	clean  = kingpin.Command("clean", "Clean up from last run.")
 
 	debug = kingpin.Flag("debug", "Enable debug mode.").Bool()
 
@@ -59,6 +60,8 @@ func ProcessCommandLineArguments() string {
 	switch kingpin.Parse() {
 	case "run":
 		return "RUN|" + *runMonth + "|" + *runYear
+	case "clean":
+		return "CLEAN"
 	case "add ucs":
 		return "ADDUCS|" + as.ToString(*addUCSIP) + "|" + *addUCSUsername + "|" + *addUCSPassword
 	case "update ucs":

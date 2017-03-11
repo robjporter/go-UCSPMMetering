@@ -1,6 +1,7 @@
 package app
 
 import (
+	"os"
 	"strings"
 
 	"github.com/robjporter/go-functions/as"
@@ -94,6 +95,17 @@ func (a *Application) checkUCSPMExists(ip string) bool {
 	return false
 }
 
+func (a *Application) cleanAll() {
+	a.LogInfo("Removing all files produced during last application run.", nil, true)
+	os.Remove(a.Config.GetString("output.matched"))
+	os.Remove(a.Config.GetString("output.unmatched"))
+	os.Remove(a.Config.GetString("output.file"))
+	os.Remove("Stage4-UCSPM.json")
+	os.Remove("Stage5-UCS.json")
+	os.Remove("Stage6-UCSPM.json")
+	a.LogInfo("Successfully cleared all previously generated files.", nil, true)
+}
+
 func (a *Application) deleteUCS(ip string) bool {
 	for i := 0; i < len(a.UCS.Systems); i++ {
 		if a.UCS.Systems[i].ip == as.ToString(ip) {
@@ -159,6 +171,8 @@ func (a *Application) processResponse(response string) {
 	switch splits[0] {
 	case "RUN":
 		a.runAll(splits[1], splits[2])
+	case "CLEAN":
+		a.cleanAll()
 	case "ADDUCS":
 		a.addUCSSystem(splits[1], splits[2], splits[3])
 	case "UPDATEUCS":
@@ -183,6 +197,7 @@ func (a *Application) processResponse(response string) {
 		a.setOutputFileName(splits[1])
 	}
 }
+
 func (a *Application) readSystems(ucss []interface{}) bool {
 	a.UCS.Systems = nil
 	for i := 0; i < len(ucss); i++ {
@@ -197,6 +212,7 @@ func (a *Application) readSystems(ucss []interface{}) bool {
 
 	return true
 }
+
 func (a *Application) runAll(month, year string) {
 	a.Log("Running inventory processes.", map[string]interface{}{"Month": month, "Year": year}, true)
 	month, year = a.getReportDates(month, year)
@@ -207,7 +223,7 @@ func (a *Application) runAll(month, year string) {
 }
 
 func (a *Application) setInputFileName(filename string) {
-	a.Config.Set("input.file", filename)
+	a.Config.Set("output.matched", filename)
 	a.saveConfig()
 }
 

@@ -10,7 +10,7 @@ import (
 
 	"github.com/robjporter/go-functions/as"
 	"github.com/robjporter/go-functions/http"
-	jmespath "github.com/robjporter/go-functions/jmespath"
+	"github.com/robjporter/go-functions/jmespath"
 )
 
 func (a *Application) ucspmInit() {
@@ -67,6 +67,7 @@ func (a *Application) getDevices(router string, method string, data string) ([]U
 									tmp.ignore = false
 									tmp.name = as.ToString(name)
 									if err3 == nil {
+										fmt.Println("ISVCENTER:> ", as.ToString(name))
 										tmp.ishypervisor = a.isVcenter(as.ToString(name))
 									}
 									devs = append(devs, tmp)
@@ -97,7 +98,7 @@ func (a *Application) getHeaders() map[string]string {
 }
 
 func (a *Application) isVcenter(name string) bool {
-	if strings.Contains(name, "VMware vCenter Server") {
+	if strings.Contains(strings.ToLower(name), "vmware vcenter server") {
 		a.LogInfo("Found a vCenter to index.", map[string]interface{}{"Name": name}, false)
 		return true
 	}
@@ -122,13 +123,12 @@ func (a *Application) ucspmInventory() {
 		a.ucspmAddHostsUnderVcenters()
 		a.ucspmMarkDevicesToIgnore()
 		a.ucspmGetUUIDForDevices()
-		a.ucspmProcessDeviceDuplicates()
 		a.ucspmSaveUUID(a.ucspmOutputUUID())
 	}
 }
 
 func (a *Application) ucspmSaveUUID(json string) {
-	filename := a.Config.GetString("input.file")
+	filename := a.Config.GetString("output.matched")
 	f, err := os.Create(filename)
 	if err == nil {
 		_, err := f.Write([]byte(json))
@@ -333,16 +333,18 @@ func (a *Application) ucspmGetHypervisorDeviceDetail(dev UCSPMDeviceInfo) (UCSPM
 }
 
 func (a *Application) ucspmAddHostsUnderVcenters() {
+	//TODO: THE DATA VALUE CANNOT BE STATICALLY SET, IT NEEDS TO BE DYNAMIC /devices/vCenter
+	// Each UCSPM object, shoould have vcenter UID
 	router := "DeviceRouter"
 	method := "getComponents"
-	data := `[{"uid":"/zport/dmd/Devices/vSphere/devices/vCenter","keys":["uid","id","title","name","hypervisorVersion","totalMemory","uuid"],"meta_type":"vSphereHostSystem","sort":"name","dir":"ASC"}]`
-	a.LogInfo("Preparing to inventory servers under discovered hypervisors.", map[string]interface{}{"Router": router, "Method": method, "Data": data}, false)
 	count := 0
 	for i := 0; i < len(a.UCSPM.Devices); i++ {
 		if a.UCSPM.Devices[i].ishypervisor {
+			data := `[{"uid":"` + a.UCSPM.Devices[i].uid + `","keys":["uid","id","title","name","hypervisorVersion","totalMemory","uuid"],"meta_type":"vSphereHostSystem","sort":"name","dir":"ASC"}]`
 			jsonStr := `{"action":"` + router + `","method":"` + method + `","data":` + data + `,"tid":` + as.ToString(a.UCSPM.TidCount) + `}`
-			url := a.makeUCSPMHostname() + "zport/dmd/Devices/vSphere/devices/vCenter/device_router"
+			url := a.makeUCSPMHostname() + strings.TrimLeft(a.UCSPM.Devices[i].uid, "/") + "/device_router"
 			headers := a.getHeaders()
+			a.LogInfo("Preparing to inventory servers under discovered hypervisors.", map[string]interface{}{"Router": router, "Method": method, "Data": data, "URL": url}, false)
 
 			code, response, err := http.SendUnsecureHTTPSRequest(url, "POST", jsonStr, headers)
 			a.UCSPM.TidCount++
@@ -414,13 +416,49 @@ func (a *Application) ucspmMarkDevicesToIgnore() {
 }
 
 func (a *Application) ucspmProcessDeviceDuplicates() {
-	fmt.Println(a.ucspmGetNonIgnoredDevices())
+	a.LogInfo("Removing duplicates recevied from UCS Performance Manager.", nil, false)
+	originalCount := a.ucspmGetNonIgnoredDevices()
 	a.ucspmProcessDiscoveredDevices()
-	fmt.Println(a.ucspmGetNonIgnoredDevices())
+	for i := 0; i < len(a.UCSPM.Devices); i++ {
+		if !a.UCSPM.Devices[i].ignore {
+			var tmp CombinedResults
+			tmp.ucspmName = a.UCSPM.Devices[i].name
+			tmp.ucspmUID = a.UCSPM.Devices[i].uid
+			tmp.ucspmUUID = a.UCSPM.Devices[i].uuid
+			tmp2 := a.ucsGetUCSSystem(tmp.ucspmUUID)
+			tmp.ucsDN = tmp2.serverdn
+			tmp.ucsDesc = tmp2.serverdescr
+			tmp.ucsModel = tmp2.servermodel
+			tmp.ucsName = tmp2.servername
+			tmp.ucsPosition = tmp2.serverposition
+			tmp.ucsSerial = tmp2.serverserial
+			tmp.ucsSystem = tmp2.ucsname
+			tmp.isManaged = a.UCSPM.Devices[i].hasHypervisor
+			a.Results = append(a.Results, tmp)
+		}
+	}
+	updatedCount := a.ucspmGetNonIgnoredDevices()
+	a.LogInfo("Removed duplicates recevied from UCS Performance Manager.", map[string]interface{}{"OriginalUUID": originalCount, "CleanUUID": updatedCount}, false)
 }
 
 func (a *Application) ucspmProcessDiscoveredDevices() {
+	var matched []string
+	for i := len(a.UCSPM.Devices) - 1; i > -1; i-- {
+		if !inStringSlice(matched, a.UCSPM.Devices[i].uuid) {
+			matched = append(matched, a.UCSPM.Devices[i].uuid)
+		} else {
+			a.UCSPM.Devices[i].ignore = true
+		}
+	}
+}
 
+func inStringSlice(slice []string, needle string) bool {
+	for i := 0; i < len(slice); i++ {
+		if strings.TrimSpace(needle) == strings.TrimSpace(slice[i]) {
+			return true
+		}
+	}
+	return false
 }
 
 func (a *Application) ucspmGetNonIgnoredDevices() int {
@@ -434,5 +472,65 @@ func (a *Application) ucspmGetNonIgnoredDevices() int {
 }
 
 func (a *Application) ucspmProcessReports() {
-	a.LogInfo("Preparing to Process all data and request reports.", nil, false)
+	a.LogInfo("Preparing to Process all data and request reports.", map[string]interface{}{"Requests": len(a.Results)}, false)
+
+	fmt.Println(a.UCS.Systems)
+	a.ucspmProcessDeviceDuplicates()
+	for i := 0; i < len(a.Results); i++ {
+		if a.Results[i].isManaged {
+			a.Results[i].ucspmKey = createUCSPMKey(a.Results[i].ucspmUID)
+			ucspmGetManagedReport(a.Results[i])
+		} else {
+			ucspmGetUnmanagedReport(a.Results[i])
+		}
+	}
+}
+
+func (a *Application) saveRunStage4() {
+	//TODO:
+	fmt.Println("RUN STAGE 4")
+}
+
+func (a *Application) saveRunStage6() {
+	//TODO:
+	fmt.Println("RUN STAGE 6")
+}
+
+func ucspmGetManagedReport(sys CombinedResults) {
+	fmt.Println("=========================================")
+	fmt.Println("IS MANAGED:> ", sys.isManaged)
+	fmt.Println("UCS DN:> ", sys.ucsDN)
+	fmt.Println("UCS DESCR:> ", sys.ucsDesc)
+	fmt.Println("UCS MODEL:> ", sys.ucsModel)
+	fmt.Println("UCS NAME:> ", sys.ucsName)
+	fmt.Println("UCS POSITION:> ", sys.ucsPosition)
+	fmt.Println("UCS SERIAL:> ", sys.ucsSerial)
+	fmt.Println("UCS SYSTEM:> ", sys.ucsSystem)
+	fmt.Println("UCSPM KEY:> ", sys.ucspmKey)
+	fmt.Println("UCSPM NAME:> ", sys.ucspmName)
+	fmt.Println("UCSPM UID:> ", sys.ucspmUID)
+	fmt.Println("UCSPM UUID:> ", sys.ucspmUUID)
+	fmt.Println("=========================================")
+}
+
+func ucspmGetUnmanagedReport(sys CombinedResults) {
+
+}
+
+func createUCSPMKey(uid string) string {
+	name := "/zport/dmd/Devices/vSphere/d"
+	newUID := ""
+	if strings.HasPrefix(uid, name) {
+		newUID = "D" + uid[len(name):len(uid)]
+	}
+	splits := strings.Split(newUID, "/")
+	if len(splits) > 2 {
+		splits[1] = "vCenter"
+	}
+	newerUID := ""
+	for i := 0; i < len(splits); i++ {
+		newerUID += splits[i] + "/"
+	}
+	newerUID = strings.TrimRight(newerUID, "/")
+	return newerUID
 }
