@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -73,7 +72,6 @@ func (a *Application) getDevices(router string, method string, data string) ([]U
 									tmp.ignore = false
 									tmp.name = as.ToString(name)
 									if err3 == nil {
-										fmt.Println("ISVCENTER:> ", as.ToString(name))
 										tmp.ishypervisor = a.isVcenter(as.ToString(name))
 									}
 									devs = append(devs, tmp)
@@ -134,17 +132,9 @@ func (a *Application) ucspmInventory() {
 }
 
 func (a *Application) ucspmSaveUUID(json string) {
-	filename := a.Config.GetString("output.matched")
-	f, err := os.Create(filename)
-	if err == nil {
-		_, err := f.Write([]byte(json))
-		if err == nil {
-			a.LogInfo("File has been saved successfully.", map[string]interface{}{"Filename": filename}, false)
-		} else {
-			a.LogInfo("There was a problem saving the file.", map[string]interface{}{"Error": err}, false)
-		}
+	if a.Config.IsSet("output.matched") {
+		a.saveFile(a.Config.GetString("output.matched"), json)
 	}
-	defer f.Close()
 }
 
 func (a *Application) ucspmOutputUUID() string {
@@ -614,6 +604,7 @@ func (a *Application) outputProcessedReport(sys CombinedResults, data dataSlice)
 	for _, d := range data {
 		csv += as.ToString(d.timestamp) + "," + as.ToString(d.value) + "\n"
 	}
+
 	a.saveFile(filename, csv)
 }
 

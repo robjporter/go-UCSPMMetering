@@ -1,7 +1,9 @@
 package app
 
 import (
+	"archive/zip"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -16,6 +18,7 @@ import (
 	"github.com/robjporter/go-functions/banner"
 	"github.com/robjporter/go-functions/colors"
 	"github.com/robjporter/go-functions/environment"
+	"github.com/robjporter/go-functions/lfshook"
 	"github.com/robjporter/go-functions/logrus"
 	"github.com/robjporter/go-functions/terminal"
 	"github.com/robjporter/go-functions/timing"
@@ -81,15 +84,23 @@ func (a *Application) getReportDates(month, year string) (string, string) {
 func (a *Application) init() {
 	a.Config = viper.New()
 	a.Logger = logrus.New()
-	a.Logger.Out = os.Stdout
 	a.Logger.Level = logrus.DebugLevel
 	customFormatter := new(logrus.TextFormatter)
 	customFormatter.TimestampFormat = "02-01-2006 15:04:05.000"
 	customFormatter.FullTimestamp = true
 	a.Logger.Formatter = customFormatter
+	a.Logger.Out = os.Stdout
+	ts := as.ToString(time.Now().Unix())
+	a.Logger.Hooks.Add(lfshook.NewHook(lfshook.PathMap{
+		logrus.InfoLevel:  "data/info-" + ts + ".log",
+		logrus.ErrorLevel: "data/error-" + ts + ".log",
+		logrus.WarnLevel:  "data/warn-" + ts + ".log",
+		logrus.DebugLevel: "data/debug-" + ts + ".log",
+		logrus.FatalLevel: "data/fatal-" + ts + ".log",
+	}))
 	a.Key = []byte("CiscoFinanceOpenPay12345")
 	a.displayBanner()
-
+	os.Mkdir("data", 0700)
 }
 
 func (a *Application) displayBanner() {
@@ -101,7 +112,7 @@ func (a *Application) displayBanner() {
 
 func (a *Application) LoadConfig() {
 	a.init()
-	a.LogInfo("Loading configuration file", nil, false)
+	a.Log("Loading Configuration File.", nil, true)
 	configName := ""
 	configExtension := ""
 	configPath := ""
@@ -113,13 +124,14 @@ func (a *Application) LoadConfig() {
 	}
 	configPath = filepath.Dir(a.ConfigFile)
 
-	a.Log("Configuration File defined", map[string]interface{}{"Path": configPath, "Name": configName, "Extension": configExtension}, true)
-
 	a.Config.SetConfigName(configName)
 	a.Config.SetConfigType(configExtension)
 	a.Config.AddConfigPath(configPath)
 
+	a.Log("Configuration File defined", map[string]interface{}{"Path": configPath, "Name": configName, "Extension": configExtension}, true)
+
 	a.createBlankConfig(a.ConfigFile)
+
 	err := a.Config.ReadInConfig()
 	if err != nil {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
@@ -214,6 +226,7 @@ func (a *Application) saveConfig() {
 }
 
 func (a *Application) saveFile(filename, data string) bool {
+	filename = "data/" + filename
 	ret := false
 	f, err := os.Create(filename)
 	if err == nil {
@@ -248,5 +261,110 @@ func (a *Application) saveRunStage1() {
 }
 
 func (a *Application) saveRunStage7() {
-	fmt.Println("RUN STAGE 7")
+	a.LogInfo("Saving data from Run Stage 7.", nil, false)
+	a.zipDataDir()
+}
+
+func (a *Application) zipDataDir() {
+	a.LogInfo("Preparing to archive output directory.", nil, false)
+	zipit("./data", "./Run-Complete-"+as.ToString(time.Now().Unix())+"-Data.zip")
+	a.LogInfo("Archive created.", nil, false)
+}
+
+func zipit(source, target string) error {
+	zipfile, err := os.Create(target)
+	if err != nil {
+		return err
+	}
+	defer zipfile.Close()
+
+	archive := zip.NewWriter(zipfile)
+	defer archive.Close()
+
+	info, err := os.Stat(source)
+	if err != nil {
+		return nil
+	}
+
+	var baseDir string
+	if info.IsDir() {
+		baseDir = filepath.Base(source)
+	}
+
+	filepath.Walk(source, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		header, err := zip.FileInfoHeader(info)
+		if err != nil {
+			return err
+		}
+
+		if baseDir != "" {
+			header.Name = filepath.Join(baseDir, strings.TrimPrefix(path, source))
+		}
+
+		if info.IsDir() {
+			header.Name += "/"
+		} else {
+			header.Method = zip.Deflate
+		}
+
+		writer, err := archive.CreateHeader(header)
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			return nil
+		}
+
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+		_, err = io.Copy(writer, file)
+		return err
+	})
+
+	return err
+}
+
+func unzip(archive, target string) error {
+	reader, err := zip.OpenReader(archive)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(target, 0755); err != nil {
+		return err
+	}
+
+	for _, file := range reader.File {
+		path := filepath.Join(target, file.Name)
+		if file.FileInfo().IsDir() {
+			os.MkdirAll(path, file.Mode())
+			continue
+		}
+
+		fileReader, err := file.Open()
+		if err != nil {
+			return err
+		}
+		defer fileReader.Close()
+
+		targetFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, file.Mode())
+		if err != nil {
+			return err
+		}
+		defer targetFile.Close()
+
+		if _, err := io.Copy(targetFile, fileReader); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

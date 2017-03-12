@@ -9,6 +9,7 @@ This tool brings together a couple of enterprise applications to allow the captu
 * Each device is then queried to get the associated hardware UUID. (If one is not in the Cisco UCS Performance Manager inventory, then it is ignored.)
 * Each UCS Domain is then queried for all of the UUID's and returns information about the hardware it is associated with.
 * The tool will then match each of the UUID's with the physical server UUID and produce an output of information. (Mainly ties a system to the Cisco UCS Server serial number)
+* Once matched, each if the UUID's are then queried again in Cisco UCS Performance Manager for the report information over the specified period.
 
 
 ## Setting up your GO environment

@@ -2,10 +2,10 @@ package app
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	functions "github.com/robjporter/go-functions"
+	"github.com/robjporter/go-functions/as"
 	"github.com/robjporter/go-functions/etree"
 	"github.com/robjporter/go-functions/http"
 	"github.com/robjporter/go-functions/viper"
@@ -20,16 +20,7 @@ func (a *Application) ucsExportToCSV() {
 
 	}
 	if a.Config.IsSet("output.file") {
-		f, err := os.Create(a.Config.GetString("output.file"))
-		if err == nil {
-			_, err := f.Write([]byte(csv))
-			if err == nil {
-				a.LogInfo("Output files saved successfully.", map[string]interface{}{"File": a.Config.GetString("output.file")}, true)
-			} else {
-				a.LogWarn("There was an error saving the file.", map[string]interface{}{"Error": err}, true)
-			}
-		}
-		defer f.Close()
+		a.saveFile(a.Config.GetString("output.file"), csv)
 	}
 }
 
@@ -55,14 +46,26 @@ func (a *Application) ucsProcessMatchedUUID() {
 
 func (a *Application) saveUnmatchedUUID() {
 	a.LogInfo("Saving unmatched UUID.", map[string]interface{}{"Unmatched": len(a.UCS.Unmatched)}, false)
-
-	jsonStr := `{"uuids": [`
+	found := false
+	jsonStr := `{"UUIDS": {`
 	for i := 0; i < len(a.UCS.Unmatched); i++ {
-		jsonStr += `"` + a.UCS.Unmatched[i] + `",`
+		for j := len(a.UCSPM.Devices) - 1; j > -1; j-- {
+			if a.UCSPM.Devices[j].uuid == a.UCS.Unmatched[i] && !found {
+				jsonStr += `"hasHypervisor":"` + as.ToString(a.UCSPM.Devices[j].hasHypervisor) + `",`
+				jsonStr += `"hypervisorName":"` + as.ToString(a.UCSPM.Devices[j].hypervisorName) + `",`
+				jsonStr += `"hypervisorVersion":"` + as.ToString(a.UCSPM.Devices[j].hypervisorVersion) + `",`
+				jsonStr += `"ignore":"` + as.ToString(a.UCSPM.Devices[j].ignore) + `",`
+				jsonStr += `"isHypervisor":"` + as.ToString(a.UCSPM.Devices[j].ishypervisor) + `",`
+				jsonStr += `"model":"` + as.ToString(a.UCSPM.Devices[j].model) + `",`
+				jsonStr += `"name":"` + as.ToString(a.UCSPM.Devices[j].name) + `",`
+				jsonStr += `"ucspmName":"` + as.ToString(a.UCSPM.Devices[j].ucspmName) + `",`
+				jsonStr += `"uid":"` + as.ToString(a.UCSPM.Devices[j].uid) + `",`
+				jsonStr += `"uuid":"` + as.ToString(a.UCSPM.Devices[j].uuid) + `"`
+				found = true
+			}
+		}
 	}
-
-	jsonStr = strings.TrimRight(jsonStr, ",")
-	jsonStr += `]}`
+	jsonStr += `}}`
 
 	a.saveFile(a.Config.GetString("output.unmatched"), jsonStr)
 }
