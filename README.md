@@ -148,24 +148,30 @@ Once the UCS and UCS Performance Manager systems have been added, the applicatio
 ## Running the application for a specific month/year
 You may wish to run the application and gather data for a specific month and/or year, you can achieve this by setting the correct flags;
 ### Current month and year
-```go
+```fish
 > go run main.go run
 ```
 ### Current month in 2016
-```go
+```fish
 > go run main.go run --year=2016
 ```
 ### Febraury of current year
-```go
+```fish
 > go run main.go run --month=feb
 ```
 ### Specific month and year
-```go
+```fish
 > go run main.go run --month=feb --year=2016
 ```
 
 ## Cleaning up after an application run
 Once the application has been run, there will be several files generated (more if in debug mode) which you may wish to remove before running the application again.
-```go
+```fish
 > go run main.go clean
+```
+
+## Building to a Binary
+One of the great advantages of GO is the ability to compile the code and all dependencies into a single binary file.  This is enhanced by building for multiple platforms.  I have included a short script to compile to most of the common formats and place them in the ./bin folder.  To run this;
+```fish
+> ./buildall.sh
 ```
