@@ -28,3 +28,4 @@ uuid.json
 output.csv
 /bin
 .DS_Store
+*.DS_Store
