@@ -10,9 +10,6 @@ This tool brings together a couple of enterprise applications to allow the captu
 * Each UCS Domain is then queried for all of the UUID's and returns information about the hardware it is associated with.
 * The tool will then match each of the UUID's with the physical server UUID and produce an output of information. (Mainly ties a system to the Cisco UCS Server serial number)
 
-### To be completed
-* Pull a report from each UUID in Performance Manager on a weekly basis.
-
 
 ## Setting up your GO environment
 Depending on your particular environment, there are a number of ways to setup and install GO.  This repo was developed on a MAC and was installed using Brew.  For instructions on installing HomeBrew, please check [here](https://brew.sh/); and then entering;
@@ -105,7 +102,7 @@ The delete process will only succeed if the IP of the UCS Domain is already in t
 ```go
 > go run main.go delete ucs --ip=<IP>
 ```
-### Show UCS Domain
+### Show UCS Domains
 To show the current configuration details for a UCS System;
 ```go
 > go run main.go show ucs --ip=<IP>
