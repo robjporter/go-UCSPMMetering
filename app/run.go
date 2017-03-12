@@ -1,11 +1,15 @@
 package app
 
 import (
-	"fmt"
 	"os"
 
 	"../eula"
 )
+
+func (a *Application) RunStage1() {
+	a.LogInfo("Entering Run stage 1 - Initialisation Checks", nil, false)
+	a.saveRunStage1()
+}
 
 func (a *Application) RunStage2() {
 	a.LogInfo("Entering Run stage 2 - End User License Agreement checks", nil, false)
@@ -77,8 +81,4 @@ func (a *Application) RunStage7() {
 	a.saveRunStage7()
 	//a.ucsInit()
 	//a.ucsInventory()
-}
-
-func (a *Application) saveRunStage7() {
-	fmt.Println("RUN STAGE 7")
 }

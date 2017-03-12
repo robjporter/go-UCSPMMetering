@@ -100,6 +100,7 @@ func (a *Application) cleanAll() {
 	os.Remove(a.Config.GetString("output.matched"))
 	os.Remove(a.Config.GetString("output.unmatched"))
 	os.Remove(a.Config.GetString("output.file"))
+	os.Remove("Stage1-SYS.json")
 	os.Remove("Stage4-UCSPM.json")
 	os.Remove("Stage5-UCS.json")
 	os.Remove("Stage6-MergeResults.json")

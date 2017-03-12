@@ -6,13 +6,16 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"../flags"
 	"../functions"
 
 	functions2 "github.com/robjporter/go-functions"
+	"github.com/robjporter/go-functions/as"
 	"github.com/robjporter/go-functions/banner"
 	"github.com/robjporter/go-functions/colors"
+	"github.com/robjporter/go-functions/environment"
 	"github.com/robjporter/go-functions/logrus"
 	"github.com/robjporter/go-functions/terminal"
 	"github.com/robjporter/go-functions/timing"
@@ -189,6 +192,7 @@ func (a *Application) processSystems() []interface{} {
 func (a *Application) Run() {
 	a.LogInfo("Starting main application Run stage 1", nil, false)
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	a.RunStage1()
 	a.processResponse(flags.ProcessCommandLineArguments())
 }
 
@@ -223,4 +227,26 @@ func (a *Application) saveFile(filename, data string) bool {
 	}
 	defer f.Close()
 	return ret
+}
+
+func (a *Application) saveRunStage1() {
+	a.LogInfo("Saving data from Run Stage 1.", nil, false)
+
+	jsonStr := `{"System": `
+	jsonStr += "{"
+	jsonStr += `"Time" : "` + as.ToString(time.Now()) + `",`
+	jsonStr += `"isCompiled" : "` + as.ToString(environment.IsCompiled()) + `",`
+	jsonStr += `"Compiler" : "` + environment.Compiler() + `",`
+	jsonStr += `"CPU" : "` + as.ToString(environment.NumCPU()) + `",`
+	jsonStr += `"Architecture" : "` + environment.GOARCH() + `",`
+	jsonStr += `"OS" : "` + environment.GOOS() + `",`
+	jsonStr += `"ROOT" : "` + environment.GOROOT() + `",`
+	jsonStr += `"PATH" : "` + environment.GOPATH() + `"`
+	jsonStr += `}}`
+
+	a.saveFile("Stage1-SYS.json", jsonStr)
+}
+
+func (a *Application) saveRunStage7() {
+	fmt.Println("RUN STAGE 7")
 }
