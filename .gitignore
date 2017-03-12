@@ -27,3 +27,4 @@ config.yaml
 uuid.json
 output.csv
 /bin
+.DS_Store
