@@ -94,14 +94,80 @@ Repeat this process as many times as needed.
 > go run main.go add ucs --ip=<IP> --username=<USERNAME> --password=<PASSWORD>
 ```
 
+### Update UCS Domain
+The update process will only succeed if the IP of the UCS Domain is already in the config file.
+```go
+> go run main.go update ucs --ip=<IP> --username=<USERNAME> --password=<PASSWORD>
+```
+
+### Delete UCS Domain
+The delete process will only succeed if the IP of the UCS Domain is already in the config file.
+```go
+> go run main.go delete ucs --ip=<IP>
+```
+### Show UCS Domain
+To show the current configuration details for a UCS System;
+```go
+> go run main.go show ucs --ip=<IP>
+```
+
 ### Add UCS Performance Manager
-This can only be done once.  No provision has currently been made for multiple UCS Performance Manager systems.
+This action only needs to be done once, running it again will simply over write the config, as only a single UCS Performance Manager instance is permitted.
 ```go
 > go run main.go add ucspm --ip=<IP> --username=<USERNAME> --password=<PASSWORD>
+```
+
+### Update UCS Performance Manager
+This will update the current UCS Performance Manager config.
+```go
+> go run main.go update ucspm --ip=<IP> --username=<USERNAME> --password=<PASSWORD>
+```
+
+### Delete UCS Performance Manager
+As the application will only run against a single UCS Performance Manager, there is no need to specify any details, calling delete will remove the UCS Performance Manager config. 
+```go
+> go run main.go delete ucspm
+```
+
+### Show UCS Performance Manager
+To show the current configuration details for the UCS Performance Manager;
+```go
+> go run main.go show ucspm
+```
+
+### Show All discoverable systems
+To show all the currently entered system information;
+```go
+> go run main.go show all
 ```
 
 ## Running the application
 Once the UCS and UCS Performance Manager systems have been added, the application is now ready to run.
 ```go
 > go run main.go run
+```
+
+## Running the application for a specific month/year
+You may wish to run the application and gather data for a specific month and/or year, you can achieve this by setting the correct flags;
+### Current month and year
+```go
+> go run main.go run
+```
+### Current month in 2016
+```go
+> go run main.go run --year=2016
+```
+### Febraury of current year
+```go
+> go run main.go run --month=feb
+```
+### Specific month and year
+```go
+> go run main.go run --month=feb --year=2016
+```
+
+## Cleaning up after an application run
+Once the application has been run, there will be several files generated (more if in debug mode) which you may wish to remove before running the application again.
+```go
+> go run main.go clean
 ```

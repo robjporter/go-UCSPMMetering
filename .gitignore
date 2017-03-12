@@ -24,8 +24,8 @@ _testmain.go
 *.prof
 
 config.yaml
-uuid.json
-output.csv
+*.json
+*.csv
 /bin
 .DS_Store
 *.DS_Store
