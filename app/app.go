@@ -6,15 +6,19 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"../flags"
 	"../functions"
 
 	functions2 "github.com/robjporter/go-functions"
+	"github.com/robjporter/go-functions/as"
 	"github.com/robjporter/go-functions/banner"
 	"github.com/robjporter/go-functions/colors"
+	"github.com/robjporter/go-functions/environment"
 	"github.com/robjporter/go-functions/logrus"
 	"github.com/robjporter/go-functions/terminal"
+	"github.com/robjporter/go-functions/timing"
 	"github.com/robjporter/go-functions/viper"
 	"github.com/robjporter/go-functions/yaml"
 )
@@ -27,11 +31,20 @@ func (a *Application) createBlankConfig(filename string) {
 	if !functions2.Exists(filename) {
 		a.LogInfo("Creating a new default configuration file.", nil, true)
 		a.Config.Set("eula.agreed", false)
-		a.Config.Set("input.file", "uuid.json")
+		a.Config.Set("output.matched", "matcheduuid.json")
+		a.Config.Set("output.unmatched", "unmatcheduuid.json")
 		a.Config.Set("output.file", "output.csv")
 		a.Config.Set("debug", false)
 		a.saveConfig()
 	}
+}
+
+func (a *Application) Start() {
+	timing.Timer("CORE")
+}
+
+func (a *Application) Finish() {
+	a.LogInfo("Application run finished.", map[string]interface{}{"Timer": timing.Timer("CORE")}, false)
 }
 
 func (a *Application) EncryptPassword(password string) string {
@@ -179,6 +192,7 @@ func (a *Application) processSystems() []interface{} {
 func (a *Application) Run() {
 	a.LogInfo("Starting main application Run stage 1", nil, false)
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	a.RunStage1()
 	a.processResponse(flags.ProcessCommandLineArguments())
 }
 
@@ -197,4 +211,42 @@ func (a *Application) saveConfig() {
 		}
 	}
 	a.Log("Saving configuration file complete.", nil, true)
+}
+
+func (a *Application) saveFile(filename, data string) bool {
+	ret := false
+	f, err := os.Create(filename)
+	if err == nil {
+		_, err := f.Write([]byte(data))
+		if err == nil {
+			a.LogInfo("File has been saved successfully.", map[string]interface{}{"Filename": "unmatched.json"}, false)
+			ret = true
+		} else {
+			a.LogInfo("There was a problem saving the file.", map[string]interface{}{"Error": err}, false)
+		}
+	}
+	defer f.Close()
+	return ret
+}
+
+func (a *Application) saveRunStage1() {
+	a.LogInfo("Saving data from Run Stage 1.", nil, false)
+
+	jsonStr := `{"System": `
+	jsonStr += "{"
+	jsonStr += `"Time" : "` + as.ToString(time.Now()) + `",`
+	jsonStr += `"isCompiled" : "` + as.ToString(environment.IsCompiled()) + `",`
+	jsonStr += `"Compiler" : "` + environment.Compiler() + `",`
+	jsonStr += `"CPU" : "` + as.ToString(environment.NumCPU()) + `",`
+	jsonStr += `"Architecture" : "` + environment.GOARCH() + `",`
+	jsonStr += `"OS" : "` + environment.GOOS() + `",`
+	jsonStr += `"ROOT" : "` + environment.GOROOT() + `",`
+	jsonStr += `"PATH" : "` + environment.GOPATH() + `"`
+	jsonStr += `}}`
+
+	a.saveFile("Stage1-SYS.json", jsonStr)
+}
+
+func (a *Application) saveRunStage7() {
+	fmt.Println("RUN STAGE 7")
 }

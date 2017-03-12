@@ -59,6 +59,22 @@ type AppStatus struct {
 	ucspmCount int
 }
 
+type CombinedResults struct {
+	ucspmName   string
+	ucspmUID    string
+	ucspmKey    string
+	ucspmUUID   string
+	ucsName     string
+	ucsPosition string
+	ucsSerial   string
+	ucsDN       string
+	ucsDesc     string
+	ucsModel    string
+	ucsSystem   string
+	isManaged   bool
+	reportData  []ReportData
+}
+
 type Application struct {
 	ConfigFile string
 	Debug      bool
@@ -69,6 +85,7 @@ type Application struct {
 	Status     AppStatus
 	UCSPM      UCSPMInfo
 	UCS        UCSInfo
+	Results    []CombinedResults
 }
 
 type UCSPMDeviceInfo struct {
@@ -82,4 +99,26 @@ type UCSPMDeviceInfo struct {
 	hypervisorVersion string
 	ucspmName         string
 	hasHypervisor     bool
+}
+
+type ReportData struct {
+	timestamp int
+	value     float64
+}
+
+type dataSlice []ReportData
+
+// Len is part of sort.Interface.
+func (d dataSlice) Len() int {
+	return len(d)
+}
+
+// Swap is part of sort.Interface.
+func (d dataSlice) Swap(i, j int) {
+	d[i], d[j] = d[j], d[i]
+}
+
+// Less is part of sort.Interface. We use count as the value to sort by
+func (d dataSlice) Less(i, j int) bool {
+	return d[i].timestamp < d[j].timestamp
 }

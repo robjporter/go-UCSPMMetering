@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/robjporter/go-functions/as"
+	"github.com/robjporter/go-functions/now"
 )
 
 func CurrentMonthName() string {
@@ -97,4 +98,34 @@ func monthContains(input string, start string, end string) bool {
 
 func CurrentYear() string {
 	return as.ToString(time.Now().Year())
+}
+
+func GetTimestampStartOfMonth(month string, year int) int64 {
+	t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
+	return now.New(t).BeginningOfMonth().Unix()
+}
+
+func GetTimestampEndOfMonth(month string, year int) int64 {
+	t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
+	return now.New(t).EndOfMonth().Unix()
+}
+
+func GetStartOfMonth(month string, year int) string {
+	t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
+	return now.New(t).BeginningOfMonth().String()
+}
+
+func GetEndOfMonth(month string, year int) string {
+	t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
+	return now.New(t).EndOfMonth().String()
+}
+
+func getMonthPos(month string) int {
+	months := []string{"january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"}
+	for i := 0; i < len(months); i++ {
+		if strings.ToLower(month) == months[i] {
+			return i + 1
+		}
+	}
+	return 0
 }
