@@ -252,24 +252,6 @@ func (a *Application) ucsGetUCSSystem(uuid string) UCSSystemMatchInfo {
 	return UCSSystemMatchInfo{}
 }
 
-func (a *Application) saveRunStage5() {
-	a.LogInfo("Saving data from Run Stage 5.", nil, false)
-
-	jsonStr := `{"UCS": [`
-	for i := 0; i < len(a.UCS.Systems); i++ {
-		jsonStr += "{"
-		jsonStr += `"Name" : "` + a.UCS.Systems[i].name + `",`
-		jsonStr += `"IP" : "` + a.UCS.Systems[i].ip + `",`
-		jsonStr += `"Version" : "` + a.UCS.Systems[i].version + `"`
-		jsonStr += "},"
-	}
-
-	jsonStr = strings.TrimRight(jsonStr, ",")
-	jsonStr += `]}`
-
-	a.saveFile("Stage5-UCS.json", jsonStr)
-}
-
 /*
 	UCS HELPER FUNCTIONS
 */

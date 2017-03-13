@@ -170,6 +170,7 @@ func (a *Application) getEULAStatus() bool {
 func (a *Application) processResponse(response string) {
 	a.Log("Processing command line options.", map[string]interface{}{"args": response}, true)
 	splits := strings.Split(response, "|")
+	a.addToCountMetrics(splits[0])
 	switch splits[0] {
 	case "RUN":
 		a.runAll(splits[1], splits[2])

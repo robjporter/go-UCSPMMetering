@@ -15,6 +15,7 @@ func (a *Application) RunStage2() {
 	a.LogInfo("Entering Run stage 2 - End User License Agreement checks", nil, false)
 	if a.Config.GetBool("eula.agreed") {
 		a.LogInfo("EULA has been agreed to.", nil, false)
+		a.saveRunStage2()
 		a.RunStage3()
 	} else {
 		a.LogInfo("EULA has not yest been accepted.", nil, false)
@@ -38,6 +39,7 @@ func (a *Application) RunStage3() {
 		if a.Status.ucsCount > 1 {
 			if a.Status.ucspmCount == 1 {
 				a.LogInfo("All systems, config and checks completed successfully.", nil, false)
+				a.saveRunStage3()
 				a.RunStage4()
 			} else {
 				a.Log("The is no UCS Performance Manager system entered into the config file.", nil, false)

@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"math/rand"
 	"sort"
 	"strconv"
@@ -479,40 +478,6 @@ func (a *Application) ucspmProcessReports() {
 			a.ucspmGetUnmanagedReport(a.Results[i])
 		}
 	}
-}
-
-func (a *Application) saveRunStage4() {
-	//TODO:
-	fmt.Println("RUN STAGE 4")
-}
-
-func (a *Application) saveRunStage6() {
-	a.LogInfo("Saving data from Run Stage 6.", nil, false)
-
-	jsonStr := `{"Results": [`
-
-	for i := 0; i < len(a.Results); i++ {
-
-		jsonStr += "{"
-		jsonStr += `"Name" : "` + a.Results[i].ucsName + `",`
-		jsonStr += `"Description" : "` + a.Results[i].ucsDesc + `",`
-		jsonStr += `"Model" : "` + a.Results[i].ucsModel + `",`
-		jsonStr += `"Serial" : "` + a.Results[i].ucsSerial + `",`
-		jsonStr += `"System" : "` + a.Results[i].ucsSystem + `",`
-		jsonStr += `"Position" : "` + a.Results[i].ucsPosition + `",`
-		jsonStr += `"DN" : "` + a.Results[i].ucsDN + `",`
-		jsonStr += `"IsManaged" : "` + as.ToString(a.Results[i].isManaged) + `",`
-		jsonStr += `"Name2" : "` + a.Results[i].ucspmName + `",`
-		jsonStr += `"UID" : "` + a.Results[i].ucspmUID + `",`
-		jsonStr += `"Key" : "` + a.Results[i].ucspmKey + `",`
-		jsonStr += `"UUID" : "` + a.Results[i].ucspmUUID + `"`
-		jsonStr += "},"
-	}
-
-	jsonStr = strings.TrimRight(jsonStr, ",")
-	jsonStr += `]}`
-
-	a.saveFile("Stage6-MergeResults.json", jsonStr)
 }
 
 func (a *Application) ucspmGetManagedReport(sys CombinedResults) {

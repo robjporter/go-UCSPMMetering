@@ -17,7 +17,6 @@ import (
 	"github.com/robjporter/go-functions/as"
 	"github.com/robjporter/go-functions/banner"
 	"github.com/robjporter/go-functions/colors"
-	"github.com/robjporter/go-functions/environment"
 	"github.com/robjporter/go-functions/lfshook"
 	"github.com/robjporter/go-functions/logrus"
 	"github.com/robjporter/go-functions/terminal"
@@ -38,6 +37,19 @@ func (a *Application) createBlankConfig(filename string) {
 		a.Config.Set("output.unmatched", "unmatcheduuid.json")
 		a.Config.Set("output.file", "output.csv")
 		a.Config.Set("debug", false)
+		a.Config.Set("metrics.run", 0)
+		a.Config.Set("metrics.clean", 0)
+		a.Config.Set("metrics.adducs", 0)
+		a.Config.Set("metrics.updateucs", 0)
+		a.Config.Set("metrics.deleteucs", 0)
+		a.Config.Set("metrics.showucs", 0)
+		a.Config.Set("metrics.showall", 0)
+		a.Config.Set("metrics.adducspm", 0)
+		a.Config.Set("metrics.updateucspm", 0)
+		a.Config.Set("metrics.deleteucspm", 0)
+		a.Config.Set("metrics.showucspm", 0)
+		a.Config.Set("metrics.setinput", 0)
+		a.Config.Set("metrics.setoutput", 0)
 		a.saveConfig()
 	}
 }
@@ -242,29 +254,6 @@ func (a *Application) saveFile(filename, data string) bool {
 	return ret
 }
 
-func (a *Application) saveRunStage1() {
-	a.LogInfo("Saving data from Run Stage 1.", nil, false)
-
-	jsonStr := `{"System": `
-	jsonStr += "{"
-	jsonStr += `"Time" : "` + as.ToString(time.Now()) + `",`
-	jsonStr += `"isCompiled" : "` + as.ToString(environment.IsCompiled()) + `",`
-	jsonStr += `"Compiler" : "` + environment.Compiler() + `",`
-	jsonStr += `"CPU" : "` + as.ToString(environment.NumCPU()) + `",`
-	jsonStr += `"Architecture" : "` + environment.GOARCH() + `",`
-	jsonStr += `"OS" : "` + environment.GOOS() + `",`
-	jsonStr += `"ROOT" : "` + environment.GOROOT() + `",`
-	jsonStr += `"PATH" : "` + environment.GOPATH() + `"`
-	jsonStr += `}}`
-
-	a.saveFile("Stage1-SYS.json", jsonStr)
-}
-
-func (a *Application) saveRunStage7() {
-	a.LogInfo("Saving data from Run Stage 7.", nil, false)
-	a.zipDataDir()
-}
-
 func (a *Application) zipDataDir() {
 	a.LogInfo("Preparing to archive output directory.", nil, false)
 	zipit("./data", "./Run-Complete-"+as.ToString(time.Now().Unix())+"-Data.zip")
@@ -367,4 +356,10 @@ func unzip(archive, target string) error {
 	}
 
 	return nil
+}
+
+func (a *Application) addToCountMetrics(name string) {
+	value := "metrics." + strings.ToLower(name)
+	a.Config.Set(value, a.Config.GetInt(value)+1)
+	a.saveConfig()
 }
