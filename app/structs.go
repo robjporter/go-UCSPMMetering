@@ -86,6 +86,7 @@ type Application struct {
 	UCSPM      UCSPMInfo
 	UCS        UCSInfo
 	Results    []CombinedResults
+	Action     string
 }
 
 type UCSPMDeviceInfo struct {

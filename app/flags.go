@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -96,7 +97,7 @@ func (a *Application) checkUCSPMExists(ip string) bool {
 }
 
 func (a *Application) cleanAll() {
-	a.LogInfo("Removing all files produced during last application run.", nil, true)
+	fmt.Println("Removing all files produced during last application run.")
 	os.Remove(a.Config.GetString("output.matched"))
 	os.Remove(a.Config.GetString("output.unmatched"))
 	os.Remove(a.Config.GetString("output.file"))
@@ -105,7 +106,7 @@ func (a *Application) cleanAll() {
 	os.Remove("Stage5-UCS.json")
 	os.Remove("Stage6-MergeResults.json")
 	os.RemoveAll("./data/")
-	a.LogInfo("Successfully cleared all previously generated files.", nil, true)
+	fmt.Println("Successfully cleared all previously generated files.")
 }
 
 func (a *Application) deleteUCS(ip string) bool {
