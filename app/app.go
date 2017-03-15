@@ -23,6 +23,9 @@ import (
 	"github.com/robjporter/go-functions/yaml"
 )
 
+//TODO: UNMATCHED.json missing!
+//TODO: File has been saved successfully.             Filename=unmatched.json happens as 5th line when starting app!
+
 var (
 	Core Application
 )
@@ -31,8 +34,6 @@ func (a *Application) createBlankConfig(filename string) {
 	if !functions2.Exists(filename) {
 		a.LogInfo("Creating a new default configuration file.", nil, true)
 		a.Config.Set("eula.agreed", false)
-		a.Config.Set("output.matched", "matcheduuid.json")
-		a.Config.Set("output.unmatched", "unmatcheduuid.json")
 		a.Config.Set("output.file", "output.csv")
 		a.Config.Set("debug", false)
 		a.Config.Set("metrics.run", 0)
@@ -120,7 +121,7 @@ func (a *Application) init() {
 func (a *Application) displayBanner() {
 	terminal.ClearScreen()
 	banner.PrintNewFigure("UCS Metrics", "rounded", true)
-	fmt.Println(colors.Color("Cisco Unified Computing System Metrics & Statistics Collection Tool", colors.BRIGHTYELLOW))
+	fmt.Println(colors.Color("Cisco Unified Computing System Metrics & Statistics Collection Tool v"+a.Version, colors.BRIGHTYELLOW))
 	banner.BannerPrintLineS("=", 80)
 }
 
@@ -216,9 +217,9 @@ func (a *Application) processSystems() []interface{} {
 }
 
 func (a *Application) Run() {
+	a.LogInfo("Application", map[string]interface{}{"Version": a.Version}, false)
 	a.LogInfo("Starting main application Run stage 1", nil, false)
 	runtime.GOMAXPROCS(runtime.NumCPU())
-	a.RunStage1()
 	a.processResponse(flags.ProcessCommandLineArguments())
 }
 
@@ -246,7 +247,7 @@ func (a *Application) saveFile(filename, data string) bool {
 	if err == nil {
 		_, err := f.Write([]byte(data))
 		if err == nil {
-			a.LogInfo("File has been saved successfully.", map[string]interface{}{"Filename": "unmatched.json"}, false)
+			a.LogInfo("File has been saved successfully.", map[string]interface{}{"Filename": filename}, false)
 			ret = true
 		} else {
 			a.LogInfo("There was a problem saving the file.", map[string]interface{}{"Error": err}, false)
@@ -265,6 +266,5 @@ func (a *Application) zipDataDir() {
 func (a *Application) addToCountMetrics(name string) {
 	value := "metrics." + strings.ToLower(name)
 	a.Config.Set(value, a.Config.GetInt(value)+1)
-	a.Action = name
 	a.saveConfig()
 }

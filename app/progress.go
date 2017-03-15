@@ -10,21 +10,24 @@ import (
 )
 
 func (a *Application) saveRunStage1() {
-	a.LogInfo("Saving data from Run Stage 1.", nil, false)
+	if a.Action != "CLEAN" {
+		a.LogInfo("Saving data from Run Stage 1.", nil, false)
 
-	jsonStr := `{"System": `
-	jsonStr += "{"
-	jsonStr += `"Time" : "` + as.ToString(time.Now()) + `",`
-	jsonStr += `"isCompiled" : "` + as.ToString(environment.IsCompiled()) + `",`
-	jsonStr += `"Compiler" : "` + environment.Compiler() + `",`
-	jsonStr += `"CPU" : "` + as.ToString(environment.NumCPU()) + `",`
-	jsonStr += `"Architecture" : "` + environment.GOARCH() + `",`
-	jsonStr += `"OS" : "` + environment.GOOS() + `",`
-	jsonStr += `"ROOT" : "` + environment.GOROOT() + `",`
-	jsonStr += `"PATH" : "` + environment.GOPATH() + `"`
-	jsonStr += `}}`
+		jsonStr := `{"System": `
+		jsonStr += "{"
+		jsonStr += `"Time" : "` + as.ToString(time.Now()) + `",`
+		jsonStr += `"isCompiled" : "` + as.ToString(environment.IsCompiled()) + `",`
+		jsonStr += `"Compiler" : "` + environment.Compiler() + `",`
+		jsonStr += `"CPU" : "` + as.ToString(environment.NumCPU()) + `",`
+		jsonStr += `"Architecture" : "` + environment.GOARCH() + `",`
+		jsonStr += `"OS" : "` + environment.GOOS() + `",`
+		jsonStr += `"ROOT" : "` + environment.GOROOT() + `",`
+		jsonStr += `"PATH" : "` + environment.GOPATH() + `",`
+		jsonStr += `"APPVERSION: " : "` + a.Version + `"`
+		jsonStr += `}}`
 
-	a.saveFile("Stage1-SYS.json", jsonStr)
+		a.saveFile("Stage1-SYS.json", jsonStr)
+	}
 }
 
 func (a *Application) saveRunStage2() {
@@ -38,18 +41,20 @@ func (a *Application) saveRunStage3() {
 	if err != nil {
 		a.Log("Saving data from Run Stage 3 Failed.", map[string]interface{}{"Error": err}, false)
 	} else {
-		a.LogInfo("Saving data from Run Stage3 completed successfully.", nil, false)
+		a.LogInfo("Saving data from Run Stage 3 completed successfully.", nil, false)
 	}
 }
 
 func (a *Application) saveRunStage4() {
 	a.LogInfo("Saving data from Run Stage 4.", nil, false)
-	//TODO: UCSPM Inventory
+	//TODO: UCSPM Inventory\
+	a.ucspmSaveUUID(a.ucspmOutputUUID())
 
 }
 
 func (a *Application) saveRunStage5() {
 	a.LogInfo("Saving data from Run Stage 5.", nil, false)
+	a.LogInfo("Saving all UCS System info.", nil, false)
 
 	jsonStr := `{"UCS": [`
 	for i := 0; i < len(a.UCS.Systems); i++ {
@@ -63,7 +68,36 @@ func (a *Application) saveRunStage5() {
 	jsonStr = strings.TrimRight(jsonStr, ",")
 	jsonStr += `]}`
 
-	a.saveFile("Stage5-UCS.json", jsonStr)
+	a.saveFile("Stage5-UCSSystems.json", jsonStr)
+
+	a.saveUUIDS()
+}
+
+func (a *Application) saveUUIDS() {
+	a.LogInfo("Saving all server node info.", nil, false)
+	jsonStr := `{"Servers": [`
+
+	for i := 0; i < len(a.UCS.Matches); i++ {
+		jsonStr += "{"
+		jsonStr += `"UUID" : "` + a.UCS.Matches[i].serveruuid + `",`
+		jsonStr += `"OUUID" : "` + a.UCS.Matches[i].serverouuid + `",`
+		jsonStr += `"DN" : "` + a.UCS.Matches[i].serverdn + `",`
+		jsonStr += `"DESCRIPTION" : "` + a.UCS.Matches[i].serverdescr + `",`
+		jsonStr += `"POSITION" : "` + a.UCS.Matches[i].serverposition + `",`
+		jsonStr += `"NAME" : "` + a.UCS.Matches[i].servername + `",`
+		jsonStr += `"PID" : "` + a.UCS.Matches[i].serverpid + `",`
+		jsonStr += `"MODEL" : "` + a.UCS.Matches[i].servermodel + `",`
+		jsonStr += `"SERIAL" : "` + a.UCS.Matches[i].serverserial + `",`
+		jsonStr += `"DOMAINNAME" : "` + a.UCS.Matches[i].ucsname + `",`
+		jsonStr += `"DOMAINVERSION" : "` + a.UCS.Matches[i].ucsversion + `",`
+		jsonStr += `"DOMAINURL" : "` + a.UCS.Matches[i].ucsip + `"`
+		jsonStr += "},"
+	}
+
+	jsonStr = strings.TrimRight(jsonStr, ",")
+	jsonStr += `]}`
+
+	a.saveFile("Stage5-UCSServers.json", jsonStr)
 }
 
 func (a *Application) saveRunStage6() {
@@ -92,10 +126,112 @@ func (a *Application) saveRunStage6() {
 	jsonStr = strings.TrimRight(jsonStr, ",")
 	jsonStr += `]}`
 
-	a.saveFile("Stage6-MergeResults.json", jsonStr)
+	a.saveFile("Stage6-MergedResults.json", jsonStr)
+
+	a.LogInfo("Successfully matched UUIDs.", map[string]interface{}{"Discovered": len(a.UCS.UUID), "Matched": len(a.UCS.Matched)}, true)
+	a.saveMatchedUUID()
+	if len(a.UCS.Matched) < len(a.UCS.UUID) {
+		a.LogInfo("There were some unmatched UUID's.", map[string]interface{}{"Unmatched": a.UCS.Unmatched}, true)
+		a.saveUnmatchedUUID()
+	}
 }
 
 func (a *Application) saveRunStage7() {
 	a.LogInfo("Saving data from Run Stage 7.", nil, false)
 	a.zipDataDir()
+}
+
+func (a *Application) saveMatchedUUID() {
+	a.LogInfo("Saving unmatched UUID.", map[string]interface{}{"Unmatched": len(a.UCS.Unmatched)}, false)
+	found := false
+	jsonStr := `{"UUIDS": [`
+	for i := 0; i < len(a.UCS.Matched); i++ {
+		for j := len(a.UCSPM.Devices) - 1; j > -1; j-- {
+			if a.UCSPM.Devices[j].uuid == a.UCS.Matched[i].serveruuid && !found {
+				jsonStr += "{"
+				jsonStr += `"hasHypervisor":"` + as.ToString(a.UCSPM.Devices[j].hasHypervisor) + `",`
+				jsonStr += `"hypervisorName":"` + as.ToString(a.UCSPM.Devices[j].hypervisorName) + `",`
+				jsonStr += `"hypervisorVersion":"` + as.ToString(a.UCSPM.Devices[j].hypervisorVersion) + `",`
+				jsonStr += `"ignore":"` + as.ToString(a.UCSPM.Devices[j].ignore) + `",`
+				jsonStr += `"isHypervisor":"` + as.ToString(a.UCSPM.Devices[j].ishypervisor) + `",`
+				jsonStr += `"model":"` + as.ToString(a.UCSPM.Devices[j].model) + `",`
+				jsonStr += `"name":"` + as.ToString(a.UCSPM.Devices[j].name) + `",`
+				jsonStr += `"ucspmName":"` + as.ToString(a.UCSPM.Devices[j].ucspmName) + `",`
+				jsonStr += `"uid":"` + as.ToString(a.UCSPM.Devices[j].uid) + `",`
+				jsonStr += `"uuid":"` + as.ToString(a.UCSPM.Devices[j].uuid) + `"`
+				jsonStr += "},"
+				found = true
+			}
+		}
+		found = false
+	}
+	jsonStr = strings.TrimRight(jsonStr, ",")
+	jsonStr += `]}`
+
+	a.saveFile("Stage6-MatchedUUID.json", jsonStr)
+}
+
+func (a *Application) saveUnmatchedUUID() {
+	a.LogInfo("Saving unmatched UUID.", map[string]interface{}{"Unmatched": len(a.UCS.Unmatched)}, false)
+	found := false
+	jsonStr := `{"UUIDS": [`
+	for i := 0; i < len(a.UCS.Unmatched); i++ {
+		for j := len(a.UCSPM.Devices) - 1; j > -1; j-- {
+			if a.UCSPM.Devices[j].uuid == a.UCS.Unmatched[i] && !found {
+				jsonStr += "{"
+				jsonStr += `"hasHypervisor":"` + as.ToString(a.UCSPM.Devices[j].hasHypervisor) + `",`
+				jsonStr += `"hypervisorName":"` + as.ToString(a.UCSPM.Devices[j].hypervisorName) + `",`
+				jsonStr += `"hypervisorVersion":"` + as.ToString(a.UCSPM.Devices[j].hypervisorVersion) + `",`
+				jsonStr += `"ignore":"` + as.ToString(a.UCSPM.Devices[j].ignore) + `",`
+				jsonStr += `"isHypervisor":"` + as.ToString(a.UCSPM.Devices[j].ishypervisor) + `",`
+				jsonStr += `"model":"` + as.ToString(a.UCSPM.Devices[j].model) + `",`
+				jsonStr += `"name":"` + as.ToString(a.UCSPM.Devices[j].name) + `",`
+				jsonStr += `"ucspmName":"` + as.ToString(a.UCSPM.Devices[j].ucspmName) + `",`
+				jsonStr += `"uid":"` + as.ToString(a.UCSPM.Devices[j].uid) + `",`
+				jsonStr += `"uuid":"` + as.ToString(a.UCSPM.Devices[j].uuid) + `"`
+				jsonStr += "},"
+				found = true
+			}
+		}
+	}
+	jsonStr = strings.TrimRight(jsonStr, ",")
+	jsonStr += `]}`
+
+	a.saveFile("Stage6-UnmatchedUUID.json", jsonStr)
+}
+
+func (a *Application) ucspmSaveUUID(json string) {
+	a.saveFile("Stage4-DiscoveredUUID.json", json)
+}
+
+func (a *Application) ucspmOutputUUID() string {
+	jsonStr := `{"uuids": [`
+	uuid := []string{}
+
+	a.LogInfo("Building identified UUID list.", nil, false)
+
+	for i := 0; i < len(a.UCSPM.Devices); i++ {
+		if !a.UCSPM.Devices[i].ignore {
+			if a.UCSPM.Devices[i].uuid != "" {
+				uuid = append(uuid, a.UCSPM.Devices[i].uuid)
+			} else {
+				a.UCSPM.Devices[i].ignore = true
+			}
+		}
+	}
+
+	a.LogInfo("Removing duplicates from UUID list.", nil, false)
+	uuid = a.ucspmRemoveDuplicates(uuid)
+	a.UCSPM.ProcessedUUID = uuid
+	a.LogInfo("Identified unique UUID list.", map[string]interface{}{"UUID": len(uuid)}, false)
+
+	for i := 0; i < len(uuid); i++ {
+		jsonStr += `"` + uuid[i] + `",`
+	}
+
+	a.LogInfo("Building JSON output string", nil, false)
+
+	jsonStr = strings.TrimRight(jsonStr, ",")
+	jsonStr += `]}`
+	return jsonStr
 }

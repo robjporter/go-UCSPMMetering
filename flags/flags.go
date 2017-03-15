@@ -15,7 +15,8 @@ var (
 	input  = kingpin.Command("input", "Configure the input file.")
 	clean  = kingpin.Command("clean", "Clean up from last run.")
 
-	debug = kingpin.Flag("debug", "Enable debug mode.").Bool()
+	debug     = kingpin.Command("debug", "Flip debug status.")
+	showDebug = show.Command("debug", "Show debug status")
 
 	addUCS    = add.Command("ucs", "Add a UCS Domain")
 	updateUCS = update.Command("ucs", "Update a UCS Domain")
@@ -84,6 +85,10 @@ func ProcessCommandLineArguments() string {
 		return "SETINPUT|" + *inputFile
 	case "output":
 		return "SETOUTPUT|" + *outputFile
+	case "debug":
+		return "DEBUG"
+	case "show debug":
+		return "SHOWDEBUG"
 	}
 	return ""
 }

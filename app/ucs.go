@@ -4,11 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	functions "github.com/robjporter/go-functions"
-	"github.com/robjporter/go-functions/as"
 	"github.com/robjporter/go-functions/etree"
 	"github.com/robjporter/go-functions/http"
-	"github.com/robjporter/go-functions/viper"
 )
 
 func (a *Application) ucsExportToCSV() {
@@ -37,37 +34,7 @@ func (a *Application) ucsProcessMatchedUUID() {
 		}
 	}
 	a.ucsRemoveMatched(unmatched)
-	a.LogInfo("Successfully matched UUIDs.", map[string]interface{}{"Discovered": len(a.UCS.UUID), "Matched": len(a.UCS.Matched)}, true)
-	if len(a.UCS.Matched) < len(a.UCS.UUID) {
-		a.LogInfo("There were some unmatched UUID's.", map[string]interface{}{"Unmatched": a.UCS.Unmatched}, true)
-		a.saveUnmatchedUUID()
-	}
-}
 
-func (a *Application) saveUnmatchedUUID() {
-	a.LogInfo("Saving unmatched UUID.", map[string]interface{}{"Unmatched": len(a.UCS.Unmatched)}, false)
-	found := false
-	jsonStr := `{"UUIDS": {`
-	for i := 0; i < len(a.UCS.Unmatched); i++ {
-		for j := len(a.UCSPM.Devices) - 1; j > -1; j-- {
-			if a.UCSPM.Devices[j].uuid == a.UCS.Unmatched[i] && !found {
-				jsonStr += `"hasHypervisor":"` + as.ToString(a.UCSPM.Devices[j].hasHypervisor) + `",`
-				jsonStr += `"hypervisorName":"` + as.ToString(a.UCSPM.Devices[j].hypervisorName) + `",`
-				jsonStr += `"hypervisorVersion":"` + as.ToString(a.UCSPM.Devices[j].hypervisorVersion) + `",`
-				jsonStr += `"ignore":"` + as.ToString(a.UCSPM.Devices[j].ignore) + `",`
-				jsonStr += `"isHypervisor":"` + as.ToString(a.UCSPM.Devices[j].ishypervisor) + `",`
-				jsonStr += `"model":"` + as.ToString(a.UCSPM.Devices[j].model) + `",`
-				jsonStr += `"name":"` + as.ToString(a.UCSPM.Devices[j].name) + `",`
-				jsonStr += `"ucspmName":"` + as.ToString(a.UCSPM.Devices[j].ucspmName) + `",`
-				jsonStr += `"uid":"` + as.ToString(a.UCSPM.Devices[j].uid) + `",`
-				jsonStr += `"uuid":"` + as.ToString(a.UCSPM.Devices[j].uuid) + `"`
-				found = true
-			}
-		}
-	}
-	jsonStr += `}}`
-
-	a.saveFile(a.Config.GetString("output.unmatched"), jsonStr)
 }
 
 func (a *Application) ucsRemoveMatched(list []string) {
@@ -79,7 +46,7 @@ func (a *Application) ucsRemoveMatched(list []string) {
 }
 
 func (a *Application) ucsReadUCSPMUUIDFile() {
-	filename := a.Config.GetString("output.matched")
+	/*filename := "data/Stage4-DiscoveredUUID.json"
 	if functions.Exists(filename) {
 
 		var uuids = viper.New()
@@ -94,7 +61,8 @@ func (a *Application) ucsReadUCSPMUUIDFile() {
 			}
 		}
 		a.LogInfo("Loaded UCS UUID from UCS Performance Manager.", map[string]interface{}{"Count": len(a.UCS.UUID), "UUID": a.UCS.UUID}, true)
-	}
+	}*/
+	a.UCS.UUID = a.UCSPM.ProcessedUUID
 }
 
 func (a *Application) ucsInit() {
@@ -305,11 +273,14 @@ func ucsGetServerDN(result string) []string {
 		panic(err)
 	}
 	root := doc.SelectElement("configFindDnsByClassId")
-	out := root.SelectElement("outDns")
-
-	for _, server := range out.SelectElements("dn") {
-		dn := server.SelectAttrValue("value", "unknown")
-		results = append(results, dn)
+	if root != nil {
+		out := root.SelectElement("outDns")
+		if out != nil {
+			for _, server := range out.SelectElements("dn") {
+				dn := server.SelectAttrValue("value", "unknown")
+				results = append(results, dn)
+			}
+		}
 	}
 	return results
 }
@@ -320,24 +291,28 @@ func getServerDetail(result string) (string, string, string, string, string, str
 		panic(err)
 	}
 	root := doc.SelectElement("configResolveDn")
-	out := root.SelectElement("outConfig")
+	if root != nil {
+		out := root.SelectElement("outConfig")
+		if out != nil {
+			var server *etree.Element
+			if server = out.SelectElement("computeRackUnit"); server == nil {
+				if server = out.SelectElement("computeBlade"); server == nil {
+					fmt.Println("ERROR")
+				}
+			}
 
-	var server *etree.Element
-	if server = out.SelectElement("computeRackUnit"); server == nil {
-		if server = out.SelectElement("computeBlade"); server == nil {
-			fmt.Println("ERROR")
+			model := server.SelectAttrValue("model", "unknown")
+			name := server.SelectAttrValue("name", "unknown")
+			ouuid := server.SelectAttrValue("originalUuid", "unknown")
+			pid := server.SelectAttrValue("partNumber", "unknown")
+			serial := server.SelectAttrValue("serial", "unknown")
+			uuid := server.SelectAttrValue("uuid", "unknown")
+			position := server.SelectAttrValue("serverId", "unknown")
+			decription := server.SelectAttrValue("descr", "unknown")
+			return model, name, ouuid, pid, serial, uuid, position, decription
 		}
 	}
-
-	model := server.SelectAttrValue("model", "unknown")
-	name := server.SelectAttrValue("name", "unknown")
-	ouuid := server.SelectAttrValue("originalUuid", "unknown")
-	pid := server.SelectAttrValue("partNumber", "unknown")
-	serial := server.SelectAttrValue("serial", "unknown")
-	uuid := server.SelectAttrValue("uuid", "unknown")
-	position := server.SelectAttrValue("serverId", "unknown")
-	decription := server.SelectAttrValue("descr", "unknown")
-	return model, name, ouuid, pid, serial, uuid, position, decription
+	return "", "", "", "", "", "", "", ""
 }
 
 func ucsFormatPosition(pos string) string {

@@ -87,6 +87,7 @@ type Application struct {
 	UCS        UCSInfo
 	Results    []CombinedResults
 	Action     string
+	Version    string
 }
 
 type UCSPMDeviceInfo struct {
@@ -103,7 +104,7 @@ type UCSPMDeviceInfo struct {
 }
 
 type ReportData struct {
-	timestamp int
+	timestamp string
 	value     float64
 }
 

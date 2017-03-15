@@ -109,6 +109,15 @@ func (a *Application) cleanAll() {
 	fmt.Println("Successfully cleared all previously generated files.")
 }
 
+func (a *Application) debug() {
+	if a.Config.GetBool("debug") {
+		a.Config.Set("debug", false)
+	} else {
+		a.Config.Set("debug", true)
+	}
+	a.saveConfig()
+}
+
 func (a *Application) deleteUCS(ip string) bool {
 	for i := 0; i < len(a.UCS.Systems); i++ {
 		if a.UCS.Systems[i].ip == as.ToString(ip) {
@@ -171,6 +180,7 @@ func (a *Application) getEULAStatus() bool {
 func (a *Application) processResponse(response string) {
 	a.Log("Processing command line options.", map[string]interface{}{"args": response}, true)
 	splits := strings.Split(response, "|")
+	a.Action = splits[0]
 	a.addToCountMetrics(splits[0])
 	switch splits[0] {
 	case "RUN":
@@ -199,6 +209,10 @@ func (a *Application) processResponse(response string) {
 		a.setInputFileName(splits[1])
 	case "SETOUTPUT":
 		a.setOutputFileName(splits[1])
+	case "DEBUG":
+		a.debug()
+	case "SHOWDEBUG":
+		a.showDebug()
 	}
 }
 
@@ -223,12 +237,18 @@ func (a *Application) runAll(month, year string) {
 	a.Log("Processed report dates.", map[string]interface{}{"Month": month, "Year": year}, true)
 	a.Report.Month = month
 	a.Report.Year = year
-	a.RunStage2()
+	a.RunStage1()
 }
 
 func (a *Application) setInputFileName(filename string) {
 	a.Config.Set("output.matched", filename)
 	a.saveConfig()
+}
+
+func (a *Application) showDebug() {
+	if a.Config.IsSet("debug") {
+		a.LogInfo("DEBUG Status", map[string]interface{}{"Status": a.Config.GetBool("debug")}, false)
+	}
 }
 
 func (a *Application) setOutputFileName(filename string) {

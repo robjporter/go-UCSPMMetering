@@ -126,46 +126,7 @@ func (a *Application) ucspmInventory() {
 		a.ucspmAddHostsUnderVcenters()
 		a.ucspmMarkDevicesToIgnore()
 		a.ucspmGetUUIDForDevices()
-		a.ucspmSaveUUID(a.ucspmOutputUUID())
 	}
-}
-
-func (a *Application) ucspmSaveUUID(json string) {
-	if a.Config.IsSet("output.matched") {
-		a.saveFile(a.Config.GetString("output.matched"), json)
-	}
-}
-
-func (a *Application) ucspmOutputUUID() string {
-	jsonStr := `{"uuids": [`
-	uuid := []string{}
-
-	a.LogInfo("Building identified UUID list.", nil, false)
-
-	for i := 0; i < len(a.UCSPM.Devices); i++ {
-		if !a.UCSPM.Devices[i].ignore {
-			if a.UCSPM.Devices[i].uuid != "" {
-				uuid = append(uuid, a.UCSPM.Devices[i].uuid)
-			} else {
-				a.UCSPM.Devices[i].ignore = true
-			}
-		}
-	}
-
-	a.LogInfo("Removing duplicates from UUID list.", nil, false)
-	uuid = a.ucspmRemoveDuplicates(uuid)
-	a.UCSPM.ProcessedUUID = uuid
-	a.LogInfo("Identified unique UUID list.", map[string]interface{}{"UUID": len(uuid)}, false)
-
-	for i := 0; i < len(uuid); i++ {
-		jsonStr += `"` + uuid[i] + `",`
-	}
-
-	a.LogInfo("Building JSON output string", nil, false)
-
-	jsonStr = strings.TrimRight(jsonStr, ",")
-	jsonStr += `]}`
-	return jsonStr
 }
 
 func (a *Application) ucspmRemoveDuplicates(elements []string) []string {
@@ -518,10 +479,8 @@ func (a *Application) ucspmGetManagedReport(sys CombinedResults) {
 		if code == 200 {
 			if response != "" {
 				a.LogInfo("Successfully received response from UCSPM.", map[string]interface{}{"Code": code}, true)
-
 				var data2 interface{}
 				json.Unmarshal([]byte(response), &data2)
-
 				tmp, err := jmespath.Search("results[0].datapoints", data2)
 				if err == nil {
 					tmp2 := as.ToSlice(tmp)
@@ -539,7 +498,7 @@ func (a *Application) processReport(sys CombinedResults, data []interface{}) {
 		tmp := as.ToStringMap(data[i])
 		ttmp := as.ToInt(strconv.FormatFloat(as.ToFloat(tmp["timestamp"]), 'f', 0, 64))
 		var temp ReportData
-		temp.timestamp = int(ttmp)
+		temp.timestamp = time.Unix(ttmp, 0).Format("Mon Jan _2 2006 15:04:05 ")
 		temp.value = as.ToFloat(tmp["value"])
 		m[i] = temp
 	}

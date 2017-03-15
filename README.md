@@ -175,3 +175,15 @@ One of the great advantages of GO is the ability to compile the code and all dep
 ```fish
 > ./buildall.sh
 ```
+
+## Enable debug
+This will toggle the debug status for the application.  The default will be false.  Enabling debug will not only display additional information on the console, it will also send debug entries to a separate log in the data directory.
+```fish
+> go run main.go debug
+```
+
+## Show debug status
+This will show the current status of the debug flag.
+```fish
+> go run main.go show debug
+```

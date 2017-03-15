@@ -9,6 +9,7 @@ import (
 func (a *Application) RunStage1() {
 	a.LogInfo("Entering Run stage 1 - Initialisation Checks", nil, false)
 	a.saveRunStage1()
+	a.RunStage2()
 }
 
 func (a *Application) RunStage2() {
