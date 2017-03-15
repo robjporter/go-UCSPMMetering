@@ -6,7 +6,7 @@ import (
 
 func main() {
 	app.Core.Start()
-	app.Core.Version = "0.5.1b"
+	app.Core.Version = "0.5.2b"
 	app.Core.ConfigFile = "./config.yaml"
 	app.Core.LoadConfig()
 	app.Core.Run()

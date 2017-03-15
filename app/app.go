@@ -1,6 +1,8 @@
 package app
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -243,6 +245,7 @@ func (a *Application) saveConfig() {
 func (a *Application) saveFile(filename, data string) bool {
 	filename = "data/" + filename
 	ret := false
+	data = jsonPrettyPrint(data)
 	f, err := os.Create(filename)
 	if err == nil {
 		_, err := f.Write([]byte(data))
@@ -255,6 +258,15 @@ func (a *Application) saveFile(filename, data string) bool {
 	}
 	defer f.Close()
 	return ret
+}
+
+func jsonPrettyPrint(in string) string {
+	var out bytes.Buffer
+	err := json.Indent(&out, []byte(in), "", "  ")
+	if err != nil {
+		return in
+	}
+	return out.String()
 }
 
 func (a *Application) zipDataDir() {
