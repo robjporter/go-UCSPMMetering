@@ -32,6 +32,19 @@ var (
 	Core Application
 )
 
+func (a *Application) addCommand(ip string, xml string, headers map[string]string, response string, code int, err error) {
+	var tmp CommandInfo
+	tmp.RequestURL = ip
+	tmp.RequestBody = strings.Replace(xml, "\"", "'", -1)
+	tmp.RequestHeaders = headers
+	tmp.ResponseBody = response
+	tmp.ResponseCode = code
+	if err != nil {
+		tmp.ResponseError = err.Error()
+	}
+	a.Commands = append(a.Commands, tmp)
+}
+
 func (a *Application) createBlankConfig(filename string) {
 	if !functions2.Exists(filename) {
 		a.LogInfo("Creating a new default configuration file.", nil, true)

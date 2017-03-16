@@ -29,6 +29,15 @@ type UCSSystemMatchInfo struct {
 	ucsip          string
 }
 
+type CommandInfo struct {
+	RequestURL     string
+	RequestHeaders map[string]string
+	RequestBody    string
+	ResponseBody   string
+	ResponseCode   int
+	ResponseError  string
+}
+
 type UCSInfo struct {
 	configFile string
 	UUID       []string
@@ -88,6 +97,7 @@ type Application struct {
 	Results    []CombinedResults
 	Action     string
 	Version    string
+	Commands   []CommandInfo
 }
 
 type UCSPMDeviceInfo struct {

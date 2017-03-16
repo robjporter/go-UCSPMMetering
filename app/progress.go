@@ -71,6 +71,7 @@ func (a *Application) saveRunStage5() {
 	a.saveFile("Stage5-UCSSystems.json", jsonStr)
 
 	a.saveUUIDS()
+	a.saveIgnored()
 }
 
 func (a *Application) saveUUIDS() {
@@ -98,6 +99,34 @@ func (a *Application) saveUUIDS() {
 	jsonStr += `]}`
 
 	a.saveFile("Stage5-UCSServers.json", jsonStr)
+
+}
+
+func (a *Application) saveIgnored() {
+	a.LogInfo("Saving all ignored device info.", nil, false)
+	jsonStr := `{"Devices": [`
+
+	for i := 0; i < len(a.UCSPM.Devices); i++ {
+		if a.UCSPM.Devices[i].ignore {
+			jsonStr += "{"
+			jsonStr += `"hasHypervisor":"` + as.ToString(a.UCSPM.Devices[i].hasHypervisor) + `",`
+			jsonStr += `"hypervisorName":"` + as.ToString(a.UCSPM.Devices[i].hypervisorName) + `",`
+			jsonStr += `"hypervisorVersion":"` + as.ToString(a.UCSPM.Devices[i].hypervisorVersion) + `",`
+			jsonStr += `"ignore":"` + as.ToString(a.UCSPM.Devices[i].ignore) + `",`
+			jsonStr += `"isHypervisor":"` + as.ToString(a.UCSPM.Devices[i].ishypervisor) + `",`
+			jsonStr += `"model":"` + as.ToString(a.UCSPM.Devices[i].model) + `",`
+			jsonStr += `"name":"` + as.ToString(a.UCSPM.Devices[i].name) + `",`
+			jsonStr += `"ucspmName":"` + as.ToString(a.UCSPM.Devices[i].ucspmName) + `",`
+			jsonStr += `"uid":"` + as.ToString(a.UCSPM.Devices[i].uid) + `",`
+			jsonStr += `"uuid":"` + as.ToString(a.UCSPM.Devices[i].uuid) + `"`
+			jsonStr += "},"
+		}
+	}
+
+	jsonStr = strings.TrimRight(jsonStr, ",")
+	jsonStr += `]}`
+
+	a.saveFile("Stage5-IgnoredDevices.json", jsonStr)
 }
 
 func (a *Application) saveRunStage6() {
@@ -138,7 +167,34 @@ func (a *Application) saveRunStage6() {
 
 func (a *Application) saveRunStage7() {
 	a.LogInfo("Saving data from Run Stage 7.", nil, false)
+	a.exportHTTPCommands()
 	a.zipDataDir()
+}
+
+func (a *Application) exportHTTPCommands() {
+	a.LogInfo("Exporting all HTTP requests and responses.", nil, false)
+
+	jsonStr := `{"Results": [`
+
+	for i := 0; i < len(a.Commands); i++ {
+		jsonStr += "{"
+		jsonStr += `"Request" : {`
+		jsonStr += `"URL" : "` + a.Commands[i].RequestURL + `",`
+		jsonStr += `"Headers" : "` + as.ToString(a.Commands[i].RequestHeaders) + `",`
+		jsonStr += `"Body" : "` + a.Commands[i].RequestBody + `"`
+		jsonStr += `},`
+		jsonStr += `"Response" : {`
+		jsonStr += `"Code" : "` + as.ToString(a.Commands[i].ResponseCode) + `",`
+		jsonStr += `"Body" : "` + a.Commands[i].ResponseBody + `",`
+		jsonStr += `"Error" : "` + as.ToString(a.Commands[i].ResponseError) + `"`
+		jsonStr += `}`
+		jsonStr += "},"
+	}
+
+	jsonStr = strings.TrimRight(jsonStr, ",")
+	jsonStr += `]}`
+
+	a.saveFile("Stage7-HTTPRequests.json", jsonStr)
 }
 
 func (a *Application) saveMatchedUUID() {

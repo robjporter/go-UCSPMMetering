@@ -48,6 +48,8 @@ func (a *Application) getDevices(router string, method string, data string) ([]U
 	code, response, err := http.SendUnsecureHTTPSRequest(url, "POST", jsonStr, headers)
 	a.UCSPM.TidCount++
 
+	a.addCommand(url, jsonStr, headers, response, code, err)
+
 	if err == nil {
 		if code == 200 {
 			if response != "" {
@@ -207,6 +209,8 @@ func (a *Application) ucspmGetStandaloneVsphereDeviceDetail(dev UCSPMDeviceInfo)
 	code, response, err := http.SendUnsecureHTTPSRequest(url, "POST", jsonStr, headers)
 	a.UCSPM.TidCount++
 
+	a.addCommand(url, jsonStr, headers, response, code, err)
+
 	if err == nil {
 		if code == 200 {
 			if response != "" {
@@ -256,6 +260,8 @@ func (a *Application) ucspmGetHypervisorDeviceDetail(dev UCSPMDeviceInfo) (UCSPM
 	code, response, err := http.SendUnsecureHTTPSRequest(url, "POST", jsonStr, headers)
 	a.UCSPM.TidCount++
 
+	a.addCommand(url, jsonStr, headers, response, code, err)
+
 	if err == nil {
 		if code == 200 {
 			if response != "" {
@@ -303,6 +309,9 @@ func (a *Application) ucspmAddHostsUnderVcenters() {
 			a.LogInfo("Preparing to inventory servers under discovered hypervisors.", map[string]interface{}{"Router": router, "Method": method, "Data": data, "URL": url}, false)
 
 			code, response, err := http.SendUnsecureHTTPSRequest(url, "POST", jsonStr, headers)
+
+			a.addCommand(url, jsonStr, headers, response, code, err)
+
 			a.UCSPM.TidCount++
 			a.UCSPM.Devices[i].ignore = true
 
@@ -474,6 +483,8 @@ func (a *Application) ucspmGetManagedReport(sys CombinedResults) {
 	a.LogInfo("Requesting report.", map[string]interface{}{"ReportStart": start, "ReportEnd": end, "UID": sys.ucspmUID, "Key": sys.ucspmKey, "URL": url}, false)
 
 	code, response, err := http.SendUnsecureHTTPSRequest(url, "POST", jsonStr, headers)
+
+	a.addCommand(url, jsonStr, headers, response, code, err)
 
 	if err == nil {
 		if code == 200 {

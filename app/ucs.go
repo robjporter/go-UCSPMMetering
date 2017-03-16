@@ -106,6 +106,9 @@ func (a *Application) ucsConnectToSystem(sys UCSSystemInfo) (string, string) {
 		xml = replaceString(xml, "|USERNAME|", sys.username)
 		xml = replaceString(xml, "|PASSWORD|", a.DecryptPassword(sys.password))
 		code, response, err := http.SendUnsecureHTTPSRequest(sys.ip, "POST", xml, headers)
+
+		a.addCommand(sys.ip, xml, headers, response, code, err)
+
 		if err == nil {
 			if code == 200 {
 				result = getQueryResponseData(response, "aaaLogin", "", "outCookie")
@@ -128,6 +131,9 @@ func (a *Application) ucsGetSystemName(sys UCSSystemInfo) string {
 		headers["Content-Type"] = "application/xml"
 		xml = replaceString(xml, "|COOKIE|", sys.cookie)
 		code, response, err := http.SendUnsecureHTTPSRequest(sys.ip, "POST", xml, headers)
+
+		a.addCommand(sys.ip, xml, headers, response, code, err)
+
 		if err == nil {
 			if code == 200 {
 				result = getQueryResponseData2(response, "configResolveClass", "outConfigs", "topSystem", "name")
@@ -149,6 +155,9 @@ func (a *Application) ucsLogoutDomain(sys UCSSystemInfo) bool {
 		headers["Content-Type"] = "application/xml"
 		xml = replaceString(xml, "|COOKIE|", sys.cookie)
 		code, response, err := http.SendUnsecureHTTPSRequest(sys.ip, "POST", xml, headers)
+
+		a.addCommand(sys.ip, xml, headers, response, code, err)
+
 		if err == nil {
 			if code == 200 {
 				result = true
@@ -189,11 +198,11 @@ func (a *Application) ucsGetAllUUIDInfo() {
 }
 
 func (a *Application) ucsGetUCSData(sys UCSSystemInfo) {
-	result := ucsGetServerInfo(sys)
+	result := a.ucsGetServerInfo(sys)
 	getBladeDNs := ucsGetServerDN(result)
 	a.LogInfo("Getting UCS System Server Detail.", map[string]interface{}{"URL": sys.ip, "Servers": len(getBladeDNs)}, true)
 	for i := 0; i < len(getBladeDNs); i++ {
-		result := ucsGetServerDetail(getBladeDNs[i], sys)
+		result := a.ucsGetServerDetail(getBladeDNs[i], sys)
 		var mat UCSSystemMatchInfo
 		model, name, ouuid, pid, serial, uuid, position, description := getServerDetail(result)
 		mat.serverdn = getBladeDNs[i]
@@ -224,7 +233,7 @@ func (a *Application) ucsGetUCSSystem(uuid string) UCSSystemMatchInfo {
 	UCS HELPER FUNCTIONS
 */
 
-func ucsGetServerDetail(dn string, sys UCSSystemInfo) string {
+func (a *Application) ucsGetServerDetail(dn string, sys UCSSystemInfo) string {
 	xml, err := ucsGetServerDetailXML()
 	headers := make(map[string]string)
 	result := ""
@@ -233,6 +242,9 @@ func ucsGetServerDetail(dn string, sys UCSSystemInfo) string {
 		xml = replaceString(xml, "|COOKIE|", sys.cookie)
 		xml = replaceString(xml, "|DN|", dn)
 		code, response, err := http.SendUnsecureHTTPSRequest(sys.ip, "POST", xml, headers)
+
+		a.addCommand(sys.ip, xml, headers, response, code, err)
+
 		if err == nil {
 			if code == 200 {
 				result = response
@@ -244,7 +256,7 @@ func ucsGetServerDetail(dn string, sys UCSSystemInfo) string {
 	return result
 }
 
-func ucsGetServerInfo(sys UCSSystemInfo) string {
+func (a *Application) ucsGetServerInfo(sys UCSSystemInfo) string {
 	xml, err := ucsGetAllServersXML()
 	result := ""
 	headers := make(map[string]string)
@@ -254,6 +266,9 @@ func ucsGetServerInfo(sys UCSSystemInfo) string {
 		xml = replaceString(xml, "|COOKIE|", sys.cookie)
 
 		code, response, err := http.SendUnsecureHTTPSRequest(sys.ip, "POST", xml, headers)
+
+		a.addCommand(sys.ip, xml, headers, response, code, err)
+
 		if err == nil {
 			if code == 200 {
 				result = response
