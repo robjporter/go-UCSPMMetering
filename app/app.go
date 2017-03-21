@@ -180,11 +180,19 @@ func (a *Application) indexConfig() {
 }
 
 func (a *Application) Log(message string, fields map[string]interface{}, debugMessage bool) {
-	if debugMessage && a.Debug || !debugMessage {
+	/*if debugMessage && a.Debug || !debugMessage {
 		if fields != nil {
 			a.Logger.WithFields(fields).Debug(message)
 		} else {
 			a.Logger.Debug(message)
+		}
+	}
+	*/
+	if debugMessage && a.Debug || !debugMessage {
+		if fields != nil {
+			a.Logger.WithFields(fields).Info(message)
+		} else {
+			a.Logger.Info(message)
 		}
 	}
 }

@@ -26,15 +26,54 @@ func (a *Application) ucsProcessMatchedUUID() {
 	unmatched := make([]string, len(a.UCS.UUID))
 	copy(unmatched, a.UCS.UUID)
 	for i := 0; i < len(a.UCS.Matches); i++ {
+		matched := false
 		for j := 0; j < len(a.UCS.UUID); j++ {
-			if a.UCS.Matches[i].serveruuid == a.UCS.UUID[j] || a.UCS.Matches[i].serverouuid == a.UCS.UUID[j] {
-				a.UCS.Matched = append(a.UCS.Matched, a.UCS.Matches[i])
-				unmatched[j] = "REMOVE"
+			if !matched {
+				if a.UCS.Matches[i].serveruuid == a.UCS.UUID[j] {
+					a.UCS.Matched = append(a.UCS.Matched, a.UCS.Matches[i])
+					unmatched[j] = "REMOVE"
+					matched = true
+				} else if a.UCS.Matches[i].serverouuid == a.UCS.UUID[j] {
+					a.UCS.Matches[i].serveruuid = a.UCS.Matches[i].serverouuid
+					a.UCS.Matched = append(a.UCS.Matched, a.UCS.Matches[i])
+					unmatched[j] = "REMOVE"
+					matched = true
+				} else if a.transposeUUID(a.UCS.Matches[i].serveruuid) == a.UCS.UUID[j] {
+					a.UCS.Matches[i].serveruuid = a.transposeUUID(a.UCS.Matches[i].serveruuid)
+					a.UCS.Matched = append(a.UCS.Matched, a.UCS.Matches[i])
+					unmatched[j] = "REMOVE"
+					matched = true
+				}
 			}
 		}
 	}
 	a.ucsRemoveMatched(unmatched)
+}
 
+func (a *Application) transposeUUID(uuid string) string {
+	splits := strings.Split(uuid, "-")
+	if len(splits) == 5 {
+		splits[0] = rotateNumber(splits[0])
+		splits[1] = rotateNumber(splits[1])
+		splits[2] = rotateNumber(splits[2])
+		uuid = splits[0] + "-" + splits[1] + "-" + splits[2] + "-" + splits[3] + "-" + splits[4]
+	}
+	return uuid
+}
+
+func rotateNumber(number string) string {
+	if len(number) == 4 {
+		part1 := number[0:2]
+		part2 := number[2:4]
+		number = part2 + part1
+	} else if len(number) == 8 {
+		part1 := number[0:2]
+		part2 := number[2:4]
+		part3 := number[4:6]
+		part4 := number[6:8]
+		number = part4 + part3 + part2 + part1
+	}
+	return number
 }
 
 func (a *Application) ucsRemoveMatched(list []string) {
