@@ -1,6 +1,7 @@
 package app
 
 import (
+	"os"
 	"strings"
 	"time"
 
@@ -23,7 +24,8 @@ func (a *Application) saveRunStage1() {
 		jsonStr += `"OS" : "` + environment.GOOS() + `",`
 		jsonStr += `"ROOT" : "` + environment.GOROOT() + `",`
 		jsonStr += `"PATH" : "` + environment.GOPATH() + `",`
-		jsonStr += `"APPVERSION: " : "` + a.Version + `"`
+		jsonStr += `"APPVERSION: " : "` + a.Version + `",`
+		jsonStr += `"Args" : "` + as.ToString(os.Args) + `"`
 		jsonStr += `}}`
 
 		a.saveFile("Stage1-SYS.json", jsonStr)
