@@ -187,3 +187,16 @@ This will show the current status of the debug flag.
 ```fish
 > go run main.go show debug
 ```
+
+## Running the report test
+As the reporting is the most important aspect of this application, but it also seems to be the piece that does not always produce similar results across different UCSPM platforms.  This test can be run to validate the information the main application will use and the response it will get.
+
+To run it, do the following;
+```fish
+> go run reportTest.go <IP> <USERNAME> <PASSWORD> <HOSTSYSTEM>
+```
+
+An example would be;
+```fish
+> go run reportTest.go 192.168.1.1 admin admin 44
+```
