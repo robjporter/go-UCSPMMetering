@@ -70,6 +70,8 @@ func (a *Application) getDevices(router string, method string, data string) ([]U
 									var tmp UCSPMDeviceInfo
 									a.Log("UCS Performance Manager Device found", map[string]interface{}{"Name": name, "UID": uid}, true)
 									tmp.uid = as.ToString(uid)
+									splits := strings.Split(as.ToString(uid), "/")
+									tmp.hypervisorShortName = splits[len(splits)-1]
 									tmp.ignore = false
 									tmp.name = as.ToString(name)
 									if err3 == nil {
@@ -295,8 +297,6 @@ func (a *Application) ucspmGetHypervisorDeviceDetail(dev UCSPMDeviceInfo) (UCSPM
 }
 
 func (a *Application) ucspmAddHostsUnderVcenters() {
-	//TODO: THE DATA VALUE CANNOT BE STATICALLY SET, IT NEEDS TO BE DYNAMIC /devices/vCenter
-	// Each UCSPM object, shoould have vcenter UID
 	router := "DeviceRouter"
 	method := "getComponents"
 	count := 0
@@ -326,15 +326,17 @@ func (a *Application) ucspmAddHostsUnderVcenters() {
 						tmp, err := jmespath.Search("result.totalCount", data2)
 						if err == nil {
 							count = int(as.ToInt(tmp))
-							for i := 0; i < int(as.ToInt(tmp)); i++ {
-								version, err2 := jmespath.Search("result.data["+as.ToString(i)+"].hypervisorVersion", data2)
-								uid, err4 := jmespath.Search("result.data["+as.ToString(i)+"].uid", data2)
-								name, err5 := jmespath.Search("result.data["+as.ToString(i)+"].name", data2)
+							for j := 0; j < int(as.ToInt(tmp)); j++ {
+								version, err2 := jmespath.Search("result.data["+as.ToString(j)+"].hypervisorVersion", data2)
+								uid, err4 := jmespath.Search("result.data["+as.ToString(j)+"].uid", data2)
+								name, err5 := jmespath.Search("result.data["+as.ToString(j)+"].name", data2)
 								a.Log("UCS Performance Manager Device found", map[string]interface{}{"Name": name, "UID": uid}, true)
 								if err2 == nil && err4 == nil && err5 == nil {
 									var dev UCSPMDeviceInfo
 									dev.ignore = false
 									dev.hasHypervisor = true
+
+									dev.hypervisorShortName = a.UCSPM.Devices[i].hypervisorShortName
 
 									if err2 == nil {
 										dev.hypervisorVersion = as.ToString(version)
@@ -390,6 +392,7 @@ func (a *Application) ucspmProcessDeviceDuplicates() {
 			tmp.ucspmName = a.UCSPM.Devices[i].name
 			tmp.ucspmUID = a.UCSPM.Devices[i].uid
 			tmp.ucspmUUID = a.UCSPM.Devices[i].uuid
+			tmp.ucspmHypervisorName = a.UCSPM.Devices[i].hypervisorShortName
 			tmp2 := a.ucsGetUCSSystem(tmp.ucspmUUID)
 			tmp.ucsDN = tmp2.serverdn
 			tmp.ucsDesc = tmp2.serverdescr
@@ -442,7 +445,7 @@ func (a *Application) ucspmProcessReports() {
 	a.ucspmProcessDeviceDuplicates()
 	for i := 0; i < len(a.Results); i++ {
 		if a.Results[i].isManaged {
-			a.Results[i].ucspmKey = createUCSPMKey(a.Results[i].ucspmUID)
+			a.Results[i].ucspmKey = createUCSPMKey(a.Results[i].ucspmUID, a.Results[i].ucspmHypervisorName)
 			a.ucspmGetManagedReport(a.Results[i])
 		} else {
 			a.ucspmGetUnmanagedReport(a.Results[i])
@@ -463,7 +466,7 @@ func (a *Application) ucspmGetManagedReport(sys CombinedResults) {
 	"tags": {},
 	"returnset": "EXACT",
 	"metrics": [{
-		"metric": "vCenter/cpuUsage_cpuUsage",
+		"metric": "` + sys.ucspmHypervisorName + `/cpuUsage_cpuUsage",
 		"rate": false,
 		"rateOptions": {},
 		"aggregator": "avg",
@@ -547,20 +550,21 @@ func (a *Application) ucspmGetUnmanagedReport(sys CombinedResults) {
 
 }
 
-func createUCSPMKey(uid string) string {
+func createUCSPMKey(uid string, hypervisorName string) string {
 	name := "/zport/dmd/Devices/vSphere/d"
 	newUID := ""
 	if strings.HasPrefix(uid, name) {
 		newUID = "D" + uid[len(name):len(uid)]
 	}
-	splits := strings.Split(newUID, "/")
-	if len(splits) > 2 {
-		splits[1] = "vCenter"
-	}
-	newerUID := ""
-	for i := 0; i < len(splits); i++ {
-		newerUID += splits[i] + "/"
-	}
-	newerUID = strings.TrimRight(newerUID, "/")
+	//splits := strings.Split(newUID, "/")
+	//if len(splits) > 2 {
+	//	splits[1] = "vCenter"
+	//}
+	//newerUID := ""
+	//for i := 0; i < len(splits); i++ {
+	//	newerUID += splits[i] + "/"
+	//}
+	//newerUID = strings.TrimRight(newerUID, "/")
+	newerUID := strings.TrimRight(newUID, "/")
 	return newerUID
 }

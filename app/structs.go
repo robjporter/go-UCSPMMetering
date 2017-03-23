@@ -69,19 +69,20 @@ type AppStatus struct {
 }
 
 type CombinedResults struct {
-	ucspmName   string
-	ucspmUID    string
-	ucspmKey    string
-	ucspmUUID   string
-	ucsName     string
-	ucsPosition string
-	ucsSerial   string
-	ucsDN       string
-	ucsDesc     string
-	ucsModel    string
-	ucsSystem   string
-	isManaged   bool
-	reportData  []ReportData
+	ucspmName           string
+	ucspmUID            string
+	ucspmKey            string
+	ucspmUUID           string
+	ucspmHypervisorName string
+	ucsName             string
+	ucsPosition         string
+	ucsSerial           string
+	ucsDN               string
+	ucsDesc             string
+	ucsModel            string
+	ucsSystem           string
+	isManaged           bool
+	reportData          []ReportData
 }
 
 type Application struct {
@@ -101,16 +102,17 @@ type Application struct {
 }
 
 type UCSPMDeviceInfo struct {
-	uid               string
-	uuid              string
-	ignore            bool
-	name              string
-	model             string
-	ishypervisor      bool
-	hypervisorName    string
-	hypervisorVersion string
-	ucspmName         string
-	hasHypervisor     bool
+	uid                 string
+	uuid                string
+	ignore              bool
+	name                string
+	model               string
+	ishypervisor        bool
+	hypervisorName      string
+	hypervisorVersion   string
+	hypervisorShortName string
+	ucspmName           string
+	hasHypervisor       bool
 }
 
 type ReportData struct {

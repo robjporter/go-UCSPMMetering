@@ -11,13 +11,15 @@ import (
 )
 
 func main() {
-	if len(os.Args) == 5 {
+	if len(os.Args) == 6 {
 		ip := os.Args[1]
 		username := os.Args[2]
 		password := os.Args[3]
-		serverNumber := os.Args[4]
+		vCenter := os.Args[4]
+		serverNumber := os.Args[5]
 
-		json := []byte(`{"end": 1488326399,"series": true,"start": 1485907200,"downsample": "1h-avg","metrics": [{"metric": "vCenter/cpuUsage_cpuUsage","rate": false,"emit": false,"rateOptions": {},"aggregator": "avg","tags": {"key": ["Devices/vCenter/datacenters/Datacenter_datacenter-21/hosts/HostSystem_host-` + serverNumber + `"]},"name": "Usage-raw"},{"name": "Usage","expression": "rpn:Usage-raw,100,/"}],"returnset": "EXACT","tags": {}}`)
+		json := []byte(`{"end": 1490266161,"series": true,"start": 1485907200,"downsample": "1h-avg","metrics": [{"metric": "` + vCenter + `/cpuUsage_cpuUsage","rate": false,"emit": false,"rateOptions": {},"aggregator": "avg","tags": {"key": ["Devices/` + vCenter + `/datacenters/Datacenter_datacenter-21/hosts/HostSystem_host-` + serverNumber + `"]},"name": "Usage-raw"},{"name": "Usage","expression": "rpn:Usage-raw,100,/"}],"returnset": "EXACT","tags": {}}`)
+
 		body := bytes.NewBuffer(json)
 
 		// Create client

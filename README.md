@@ -193,10 +193,10 @@ As the reporting is the most important aspect of this application, but it also s
 
 To run it, do the following;
 ```fish
-> go run reportTest.go <IP> <USERNAME> <PASSWORD> <HOSTSYSTEM>
+> go run reportTest.go <IP> <USERNAME> <PASSWORD> <HYPERVISORNAME> <HOSTSYSTEM>
 ```
 
 An example would be;
 ```fish
-> go run reportTest.go 192.168.1.1 admin admin 44
+> go run reportTest.go 192.168.1.1 admin admin vcenter 44
 ```
