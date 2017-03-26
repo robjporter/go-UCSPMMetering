@@ -13,6 +13,10 @@ func CurrentMonthName() string {
 	return time.Now().Month().String()
 }
 
+func CurrentYear() string {
+	return as.ToString(time.Now().Year())
+}
+
 func IsYear(input string) string {
 	if isNumber(input) {
 		if isValidYear(input) {
@@ -83,8 +87,8 @@ func monthContains(input string, start string, end string) bool {
 	if input == start || input == end {
 		return true
 	}
-	pos := len(input)
-	if pos <= len(end) {
+	if len(input) >= len(start) && len(input) <= len(end) {
+		pos := len(input)
 		part := end[:pos]
 		if input == part {
 			return true
@@ -96,28 +100,44 @@ func monthContains(input string, start string, end string) bool {
 	return false
 }
 
-func CurrentYear() string {
-	return as.ToString(time.Now().Year())
-}
-
 func GetTimestampStartOfMonth(month string, year int) int64 {
-	t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
-	return now.New(t).BeginningOfMonth().Unix()
+	if getMonthPos(month) > 0 {
+		if isValidYear(as.ToString(year)) {
+			t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
+			return now.New(t).BeginningOfMonth().Unix()
+		}
+	}
+	return 0
 }
 
 func GetTimestampEndOfMonth(month string, year int) int64 {
-	t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
-	return now.New(t).EndOfMonth().Unix()
+	if getMonthPos(month) > 0 {
+		if isValidYear(as.ToString(year)) {
+			t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
+			return now.New(t).EndOfMonth().Unix()
+		}
+	}
+	return 0
 }
 
 func GetStartOfMonth(month string, year int) string {
-	t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
-	return now.New(t).BeginningOfMonth().String()
+	if getMonthPos(month) > 0 {
+		if isValidYear(as.ToString(year)) {
+			t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
+			return now.New(t).BeginningOfMonth().String()
+		}
+	}
+	return ""
 }
 
 func GetEndOfMonth(month string, year int) string {
-	t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
-	return now.New(t).EndOfMonth().String()
+	if getMonthPos(month) > 0 {
+		if isValidYear(as.ToString(year)) {
+			t := time.Date(year, time.Month(getMonthPos(month)), 1, 0, 0, 0, 0, time.Now().Location())
+			return now.New(t).EndOfMonth().String()
+		}
+	}
+	return ""
 }
 
 func getMonthPos(month string) int {

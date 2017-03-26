@@ -122,7 +122,7 @@ This will update the current UCS Performance Manager config.
 ```
 
 ### Delete UCS Performance Manager
-As the application will only run against a single UCS Performance Manager, there is no need to specify any details, calling delete will remove the UCS Performance Manager config. 
+As the application will only run against a single UCS Performance Manager, there is no need to specify any details, calling delete will remove the UCS Performance Manager config.
 ```go
 > go run main.go delete ucspm
 ```
