@@ -121,16 +121,21 @@ func (a *Application) init() {
 	a.Logger.Formatter = customFormatter
 	a.Logger.Out = os.Stdout
 	ts := as.ToString(time.Now().Unix())
+	a.RunTimeStamp = as.ToString(time.Now().Unix())
+	a.DataPath = "./data/" + a.RunTimeStamp + "/"
+
+	os.Mkdir("data", 0700)
+	os.Mkdir(a.DataPath, 0700)
+
 	a.Logger.Hooks.Add(lfshook.NewHook(lfshook.PathMap{
-		logrus.InfoLevel:  "data/info-" + ts + ".log",
-		logrus.ErrorLevel: "data/error-" + ts + ".log",
-		logrus.WarnLevel:  "data/warn-" + ts + ".log",
-		logrus.DebugLevel: "data/debug-" + ts + ".log",
-		logrus.FatalLevel: "data/fatal-" + ts + ".log",
+		logrus.InfoLevel:  a.DataPath + "info-" + ts + ".log",
+		logrus.ErrorLevel: a.DataPath + "error-" + ts + ".log",
+		logrus.WarnLevel:  a.DataPath + "warn-" + ts + ".log",
+		logrus.DebugLevel: a.DataPath + "debug-" + ts + ".log",
+		logrus.FatalLevel: a.DataPath + "fatal-" + ts + ".log",
 	}))
 	a.Key = []byte("CiscoFinanceOpenPay12345")
 	a.displayBanner()
-	os.Mkdir("data", 0700)
 }
 
 func (a *Application) displayBanner() {
@@ -264,7 +269,7 @@ func (a *Application) saveConfig() {
 }
 
 func (a *Application) saveFile(filename, data string) bool {
-	filename = "data/" + filename
+	filename = a.DataPath + filename
 	ret := false
 	data = jsonPrettyPrint(data)
 	f, err := os.Create(filename)
@@ -292,7 +297,7 @@ func jsonPrettyPrint(in string) string {
 
 func (a *Application) zipDataDir() {
 	a.LogInfo("Preparing to archive output directory.", nil, false)
-	functions2.Zipit("./data", "./Stage7-Complete-"+as.ToString(time.Now().Unix())+"-Data.zip")
+	functions2.Zipit(a.DataPath, "./Stage7-Complete-"+a.RunTimeStamp+"-Data.zip")
 	a.LogInfo("Archive created.", nil, false)
 }
 

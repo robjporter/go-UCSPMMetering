@@ -86,19 +86,21 @@ type CombinedResults struct {
 }
 
 type Application struct {
-	ConfigFile string
-	Debug      bool
-	Config     *viper.Viper
-	Logger     *logrus.Logger
-	Key        []byte
-	Report     ReportInfo
-	Status     AppStatus
-	UCSPM      UCSPMInfo
-	UCS        UCSInfo
-	Results    []CombinedResults
-	Action     string
-	Version    string
-	Commands   []CommandInfo
+	ConfigFile   string
+	Debug        bool
+	Config       *viper.Viper
+	Logger       *logrus.Logger
+	DataPath     string
+	RunTimeStamp string
+	Key          []byte
+	Report       ReportInfo
+	Status       AppStatus
+	UCSPM        UCSPMInfo
+	UCS          UCSInfo
+	Results      []CombinedResults
+	Action       string
+	Version      string
+	Commands     []CommandInfo
 }
 
 type UCSPMDeviceInfo struct {

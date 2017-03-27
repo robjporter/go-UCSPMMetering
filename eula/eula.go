@@ -1,12 +1,14 @@
 package eula
 
 import (
+	"bufio"
 	"fmt"
-	"log"
+	"io"
+	"strings"
 )
 
-func DisplayEULA() bool {
-	fmt.Println(`
+func DisplayEULA() string {
+	return `
 	Software License Agreement
 
 	1. This is an agreement between Licensor and Licensee, who is being licensed to use the named Software.
@@ -31,36 +33,26 @@ func DisplayEULA() bool {
 
 	11. This License Agreement is governed by the law of [State] applicable to [State] contracts.
 
-	12. This License Agreement is valid without Licensor's signature. It becomes effective upon the earlier of Licensee's signature or Licensee's use of the Software.`)
-
-	fmt.Println("\nPress read and confirm acceptance with y/Y/yes/YES")
-
-	output := askForConfirmation()
-
-	return output
-
+	12. This License Agreement is valid without Licensor's signature. It becomes effective upon the earlier of Licensee's signature or Licensee's use of the Software.`
 }
 
-// askForConfirmation uses Scanln to parse user input. A user must type in "yes" or "no" and
-// then press enter. It has fuzzy matching, so "y", "Y", "yes", "YES", and "Yes" all count as
-// confirmations. If the input is not recognized, it will ask again. The function does not return
-// until it gets a valid response from the user. Typically, you should use fmt to print out a question
-// before calling askForConfirmation. E.g. fmt.Println("WARNING: Are you sure? (yes/no)")
-func askForConfirmation() bool {
-	var response string
-	_, err := fmt.Scanln(&response)
-	if err != nil {
-		log.Fatal(err)
-	}
-	okayResponses := []string{"y", "Y", "yes", "Yes", "YES"}
-	nokayResponses := []string{"n", "N", "no", "No", "NO"}
-	if containsString(okayResponses, response) {
-		return true
-	} else if containsString(nokayResponses, response) {
-		return false
-	} else {
-		fmt.Println("Please type yes or no and then press enter:")
-		return askForConfirmation()
+func AskForConfirmation(question string, scanner io.Reader) bool {
+	prompt := question + "> "
+	fmt.Println("\n")
+	for {
+		reader := bufio.NewReader(scanner)
+		fmt.Print(prompt)
+
+		command, _ := reader.ReadString('\n')
+		command = strings.TrimSpace(command)
+
+		okayResponses := []string{"y", "Y", "yes", "Yes", "YES", "yEs", "yeS", "yES", "YeS", "YEs"}
+		nokayResponses := []string{"n", "N", "no", "No", "NO", "nO"}
+		if containsString(okayResponses, command) {
+			return true
+		} else if containsString(nokayResponses, command) {
+			return false
+		}
 	}
 }
 
@@ -75,7 +67,7 @@ func posString(slice []string, element string) int {
 	return -1
 }
 
-// containsString returns true iff slice contains element
+// containsString returns true if slice contains element
 func containsString(slice []string, element string) bool {
 	return !(posString(slice, element) == -1)
 }

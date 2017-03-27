@@ -1,9 +1,9 @@
 package app
 
 import (
-	"os"
-
 	"../eula"
+	"fmt"
+	"os"
 )
 
 func (a *Application) RunStage1() {
@@ -20,7 +20,8 @@ func (a *Application) RunStage2() {
 		a.RunStage3()
 	} else {
 		a.LogInfo("EULA has not yest been accepted.", nil, false)
-		answer := eula.DisplayEULA()
+		fmt.Println(eula.DisplayEULA())
+		answer := eula.AskForConfirmation("Press read and confirm acceptance with y/Y/yes/YES", os.Stdin)
 		if answer {
 			a.Config.Set("eula.agreed", true)
 			a.saveConfig()

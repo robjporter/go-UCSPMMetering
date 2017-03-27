@@ -39,7 +39,7 @@ func (a *Application) saveRunStage2() {
 
 func (a *Application) saveRunStage3() {
 	a.LogInfo("Saving data from Run Stage 3.", nil, false)
-	err := functions.CopyFile(a.ConfigFile, "data/Stage3-Config.yaml")
+	err := functions.CopyFile(a.ConfigFile, a.DataPath+"Stage3-Config.yaml")
 	if err != nil {
 		a.Log("Saving data from Run Stage 3 Failed.", map[string]interface{}{"Error": err}, false)
 	} else {
