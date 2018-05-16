@@ -512,7 +512,7 @@ func (a *Application) processReport(sys CombinedResults, data []interface{}) {
 		tmp := as.ToStringMap(data[i])
 		ttmp := as.ToInt(strconv.FormatFloat(as.ToFloat(tmp["timestamp"]), 'f', 0, 64))
 		var temp ReportData
-		temp.timestamp = time.Unix(ttmp, 0).Format("Mon Jan _2 2006 15:04:05 ")
+		temp.timestamp = time.Unix(int64(ttmp), 0).Format("Mon Jan _2 2006 15:04:05 ")
 		temp.value = as.ToFloat(tmp["value"])
 		m[i] = temp
 	}
